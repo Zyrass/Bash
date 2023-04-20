@@ -251,22 +251,8 @@ EOF
 getDiskSpace() {
     clear
     echo
-    echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
-    echo "༔                                               ༔"
-    echo "༔          🃏  ESPACE DISQUE MODE 🃏           ༔"
-    echo "༔                                               ༔"
-    echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
+    echo "MODE : Gestion de l'espace disque"
     echo
-
-    SPACE_DISK=$(df -h / | grep / | cut -d " " -f 21 | cut -d "%" -f 1)
-
-    # echo "Actuellement sur ce système d'expoitation, il y a $SPACE_DISK% d'espace disque utilisé";
-    # echo
-    echo $SPACE_DISK
-    echo
-
-    # Prénom de l'utilisateur
-    prenom="Alain"
 
     # Seuil d'espace disque libre (en pourcentage)
     seuil=5
@@ -277,12 +263,11 @@ getDiskSpace() {
     # Vérifie si l'espace disque disponible est inférieur au seuil
     if [ $espace -lt $seuil ]; then
         # Construit le message à envoyer sur Discord
-        message="Attention $prenom, l'espace disque est faible (${espace}% libre)."
+        message="Attention, l'espace disque est faible (${espace}% libre)."
 
         # Envoie le message sur Discord via le webhook
-        curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"$message\"}" https://discord.com/api/webhooks/XXX/YYY
+        curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"$message\"}" https://discord.com/api/webhooks/1098570523002277899/InkvgtZDAReTRLy-wrHJtigOgYhkDXZ7y4-S_vElPzKgDMOpFxMyjDkWgIE0lnRx8stI
     fi
-
 }
 
 setCronjobSetup() {
