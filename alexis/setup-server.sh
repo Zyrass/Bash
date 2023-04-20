@@ -9,10 +9,33 @@ if [[ $(/usr/bin/id -u) -ne 0 ]]; then
     exit 1
 fi
 
-# Configuration des paramètres passé au programme
-MODE=$1
+# Fonction pour afficher l'aide
+get_help() {
+    echo
+    echo "⛑ Utilisation : script.sh [MODE|OPTION] [...PARAMETRES]"
+
+    echo
+    echo "📌 Obtenir de l'aide :"
+    echo
+
+    echo " 📖 -h            - Option courte pour afficher l'aide."
+    echo " 📖 --help        - Option longue pour afficher l'aide."
+    echo
+
+    echo "📌 Les modes valides sont :"
+    echo
+    echo " 📖 add_user      - Ajouter un nouvel utilisateur. PARAMETRES : USERNAME PASSWORD"
+    echo " 📖 delete_user   - Supprimer un utilisateur. PARAMETRES : USERNAME"
+    echo " 📖 install       - Installer un nouveau serveur."
+    echo " 📖 nginx_host    - Configurer un nouveau serveur hôte nginx."
+    echo " 📖 disk_space    - Afficher l'espace disque disponible."
+    echo " 📖 cronjob_setup - Configurer une tâche cron."
+    echo
+}
+
+GET_MODE=$1
 SET_USERNAME=$2
-SET_USERNAME_PASSWORD=$3
+SET_PASSWORD=$3
 
 setNewUser() {
     clear
@@ -20,21 +43,19 @@ setNewUser() {
     echo "⚪ MODE : AJOUT D'UN NOUVEL UTILISATEUR"
     echo
 
-    # Vérifier si le paramètre USERNAME ($1) est fourni ainsi que le mot de passe ($2)
-    if [[ -z "$1" || -z "$2" ]]; then
-        echo "❌ - Veuillez fournir un nom d'utilisateur et un mot de passe. Fin du programme."
-        echo
+    # Vérifier si le paramètre USERNAME ($1) et le mot de passe ($2) sont fournis
+    [[ -z "$1" || -z "$2" ]] && {
+        echo "❌ - Veuillez fournir un nom d'utilisateur et un mot de passe."
+        echo "Fin du programme."
         exit 1
-    fi
+    }
 
-    GET_CREATE_NEW_USERNAME=$1
-    GET_CREATE_NEW_PASSWORD_FOR_NEW_USERNAME=$2
+    GET_NEW_USERNAME=$1
+    GET_NEW_PASSWORD=$2
 
     # Vérification de la longueur du mot de passe
-    while [[ ${#GET_CREATE_NEW_PASSWORD_FOR_NEW_USERNAME} -lt 8 ]]; do
-        echo
-        echo "Le mot de passe doit contenir au moins 8 caractères"
-        read -sp "Veuillez re-saisir un mot de passe temporaire : " GET_CREATE_NEW_PASSWORD_FOR_NEW_USERNAME
+    while ((${#GET_NEW_PASSWORD} < 8)); do
+        read -rsp $'\nLe mot de passe doit contenir au moins 8 caractères. Veuillez re-saisir un mot de passe temporaire : ' GET_NEW_PASSWORD
         echo
     done
 
@@ -42,40 +63,40 @@ setNewUser() {
     echo
     echo "Ok, voici les informations que vous souhaitez obtenir pour cet utilisateur :"
     echo
-    echo "- NOM D'UTILISATEUR : " ${GET_CREATE_NEW_USERNAME}
-    echo "- MOT DE PASSE (temporaire) : " ${GET_CREATE_NEW_PASSWORD_FOR_NEW_USERNAME}
+    echo "- NOM D'UTILISATEUR : $GET_NEW_USERNAME"
+    echo "- MOT DE PASSE (temporaire) : $GET_NEW_PASSWORD"
     echo
-    echo "Vérification si l'utilisateur ${GET_CREATE_NEW_USERNAME} existe déjà ou non..."
+    echo "Vérification si l'utilisateur $GET_NEW_USERNAME existe déjà ou non..."
 
-    if id "$GET_CREATE_NEW_USERNAME" >/dev/null 2>&1; then
+    # Vérification si l'utilisateur existe déjà
+    if id "$GET_NEW_USERNAME" >/dev/null 2>&1; then
         echo
-        echo -e "❌ - L'utilisateur \"$GET_CREATE_NEW_USERNAME\" existe déjà. Fin du programme."
+        echo -e "❌ - L'utilisateur \"$GET_NEW_USERNAME\" existe déjà. Fin du programme."
         exit 1
     else
-        echo "✅ - Cet utilisateur n'existe pas. Création en cours pour $GET_CREATE_NEW_USERNAME..."
+        echo "✅ - Cet utilisateur n'existe pas. Création en cours pour $GET_NEW_USERNAME..."
 
         # Création de l'utilisateur avec le shell bash par défaut.
-        useradd -m "$GET_CREATE_NEW_USERNAME" -s /bin/bash
+        useradd -m "$GET_NEW_USERNAME" -s /bin/bash
 
         # Création d'un mot de passe temporaire
-        echo -e "$GET_CREATE_NEW_PASSWORD_FOR_NEW_USERNAME\n$GET_CREATE_NEW_PASSWORD_FOR_NEW_USERNAME" | passwd "$GET_CREATE_NEW_USERNAME"
+        echo -e "$GET_NEW_PASSWORD\n$GET_NEW_PASSWORD" | passwd "$GET_NEW_USERNAME"
 
+        # Vérification du mot de passe
         if [[ "$?" == 1 ]]; then
             echo
-            echo -e "❌ - Le mot de passe saisie n'est pas bon kévin..."
+            echo -e "❌ - Le mot de passe saisi n'est pas valide. Fin du programme."
             exit 1
-        elif [[ "$?" == 0 ]]; then
-
+        else
             # Demande de changement de mot de passe au premier démarrage
-            chage -d 0 "$GET_CREATE_NEW_USERNAME"
+            chage -d 0 "$GET_NEW_USERNAME"
 
-            echo "✅ - ${GET_CREATE_NEW_USERNAME} a été créer avec succès."
-            echo "✅ - Le mot de passe temporaire à bien été créer."
+            echo "✅ - $GET_NEW_USERNAME a été créé avec succès."
+            echo "✅ - Le mot de passe temporaire a été créé avec succès."
             echo "✅ - Le mot de passe doit être changé au premier démarrage."
             echo
             exit 1
         fi
-
     fi
 }
 
@@ -276,20 +297,31 @@ setCronjobSetup() {
     echo "Tâche cron ajoutée avec succès !"
 }
 
-if [[ "$MODE" = "add_user" || "$MODE" = "ADD_USER" ]]; then
-    setNewUser $SET_USERNAME $SET_USERNAME_PASSWORD
-elif [[ "$MODE" = "delete_user" || "$MODE" = "DELETE_USER" ]]; then
-    setDeleteUser $SET_USERNAME
-elif [[ "$MODE" = "install" || "$MODE" = "INSTALL" ]]; then
+case $GET_MODE in
+add_user | ADD_USER)
+    setNewUser "$SET_USERNAME" "$SET_USERNAME_PASSWORD"
+    ;;
+delete_user | DELETE_USER)
+    setDeleteUser "$SET_USERNAME"
+    ;;
+-h | --help)
+    get_help
+    ;;
+install | INSTALL)
     setInstallNewServer
-elif [[ "$MODE" = "nginx_host" || "$MODE" = "NGINX_HOST" ]]; then
+    ;;
+nginx_host | NGINX_HOST)
     setNginxHost
-elif [[ "$MODE" = "disk_space" || "$MODE" = "DISK_SPACE" ]]; then
+    ;;
+disk_space | DISK_SPACE)
     getDiskSpace
-elif [[ "$MODE" = "cronjob_setup" || "$MODE" = "CRONJOB_SETUP" ]]; then
+    ;;
+cronjob_setup | CRONJOB_SETUP)
     setCronjobSetup
-else
-    echo "Désolé mais seul six (6) MODE sont possible:"
+    ;;
+*)
+    echo "Désolé mais seuls six (7) modes sont possibles:"
+    echo -e "\t-h ou --help"
     echo -e "\tadd_user"
     echo -e "\tdelete_user"
     echo -e "\tinstall"
@@ -297,4 +329,5 @@ else
     echo -e "\tdisk_space"
     echo -e "\tcronjob_setup"
     exit 1
-fi
+    ;;
+esac
