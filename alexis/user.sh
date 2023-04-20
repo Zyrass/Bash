@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 if [[ $(/usr/bin/id -u) -ne 0 ]]; then
     echo
@@ -19,26 +19,33 @@ fnc_create_user() {
 
     # Vérifier si des paramètres existes ou non
     if [[ $# -eq 2 ]]; then
-        USERNAME=$1
+        NEW_USERNAME=$1
         PASSWORD=$2
     else
         echo
-        read -rp "Veuillez saisir le nom du nouvel utilisateur : " USERNAME
-        read -sp "Veuillez saisir un mot de passe (Mode silentieux) : " PASSWORD
+        read -rp "Veuillez saisir le nom du nouvel utilisateur : " NEW_USERNAME
+        read -sp "Veuillez saisir un mot de passe temporaire (Mode silentieux) : " PASSWORD
         echo
     fi
+
+    # Vérification de la longueur du mot de passe
+    while [[ ${#PASSWORD} -lt 8 ]]; do
+        echo "Le mot de passe doit contenir au moins 8 caractères"
+        read -sp "Veuillez saisir un mot de passe temporaire (Mode silencieux) : " PASSWORD
+        echo
+    done
 
     # Affichage des informations saisies
     echo
     echo Ok, voici les identifiants que tu souhaiterais obtenir pour ce nouvel utilisateur :
     echo
-    echo "Nom d'utilisateur souhaité : " ${USERNAME}
-    echo "Son mot de passe provisoire : " ${PASSWORD}
+    echo "Nom d'utilisateur souhaité : " ${NEW_USERNAME}
+    echo "Son mot de passe provisoire est hashé : " ${PASSWORD} #| sha256sum
     echo
-    echo Vérification si l\'utilisateur "${USERNAME}" existe ou pas...
+    echo "Vérification si l\'utilisateur ${NEW_USERNAME} existe ou pas..."
     echo
 
-    if id "$USERNAME" >/dev/null 2>&1; then
+    if id "$NEW_USERNAME" >/dev/null 2>&1; then
         echo "❌ - Cet utilisateur existe déjà. Fin du programme."
         exit
     else
@@ -46,25 +53,32 @@ fnc_create_user() {
         echo "❌ - Cet utilisateur n'existe pas. Création du user."
         echo
         # Création du user avec la définition du shell bash par défaut.
-        useradd -m "$USERNAME" -s /bin/bash
-        echo "$USERNAME:$PASSWORD" | chpasswd
-        # passwd -e "$USERNAME";
-        echo "✅ - L'utilisateur a été créer avec succès"
+        useradd -m "$NEW_USERNAME" -s /bin/bash
+
+        # Création d'un mot de passe temporaire
+        echo -e "$PASSWORD\n$PASSWORD" | passwd "$NEW_USERNAME"
+
+        # Demande de changement de mot de passe au premier démarrage
+        chage -d 0 "$NEW_USERNAME"
+
+        # echo "$USERNAME:$PASSWORD" | chpasswd;
+        # passwd -e "$NEW_USERNAME";
+        echo "✅ - L'utilisateur a été créer avec succès - Mot de passe temporaire qui devra être changé au premier démarrage est actuellement : $PASSWORD"
     fi
 }
 
 fnc_delete_user() {
     if [[ $# -eq 1 ]]; then
-        USERNAME=$1
+        NEW_USERNAME=$1
     else
         echo
-        read -rp "Veuillez saisir le nom de l'utilisateur que vous voulez supprimer : " USERNAME
+        read -rp "Veuillez saisir le nom de l'utilisateur que vous voulez supprimer : " NEW_USERNAME
         echo
     fi
 
-    if id "$USERNAME" >/dev/null 2>&1; then
-        echo "✅ - Cet utilisateur existe bien, exécution de la suppression de $USERNAME et de son répertoire personnel"
-        deluser --remove-home $USERNAME
+    if id "$NEW_USERNAME" >/dev/null 2>&1; then
+        echo "✅ - Cet utilisateur existe bien, exécution de la suppression de $NEW_USERNAME et de son répertoire personnel"
+        deluser --remove-home $NEW_USERNAME
         exit
     else
         echo "❌ - Cet utilisateur n'existe pas. Fin du programme."
