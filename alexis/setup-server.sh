@@ -95,24 +95,28 @@ setDeleteUser() {
     # Paramètre de la fonction
     GET_USERNAME=$1
 
-    #
+    # Vérifier si l'utilisateur existe
     if id "$GET_USERNAME" >/dev/null 2>&1; then
         echo "✅ - $GET_USERNAME existe bien, suppression en cours..."
 
         # Vérifier si le groupe de l'utilisateur est vide et le supprimer s'il est vide
         USER_GROUP=$(id -gn $GET_USERNAME)
-        if [[ $(getent group $USER_GROUP) == "$USER_GROUP:*" ]]; then
+        if getent group "$USER_GROUP" | grep -q "$USER_GROUP:.*"; then
             echo "Le groupe $USER_GROUP est vide, il sera supprimé avec l'utilisateur."
             groupdel $USER_GROUP
         fi
 
+        # Supprimer l'utilisateur
         deluser --remove-home $GET_USERNAME
-        exit 1
+
+        echo "🎉 - Suppression de l'utilisateur $GET_USERNAME terminée avec succès. 🎊"
+        echo
     else
         echo "❌ - Désolé, l'utilisateur \"$GET_USERNAME\" n'existe pas. Fin du programme."
         echo
         exit 1
     fi
+
 }
 
 setInstallNewServer() {
