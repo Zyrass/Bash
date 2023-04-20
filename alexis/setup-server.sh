@@ -116,51 +116,26 @@ setDeleteUser() {
 }
 
 setInstallNewServer() {
+    # Efface l'écran et affiche le titre de la fonction
     clear
     echo
-    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
-    echo "༔ ༔"
-    echo "༔ ⛑ INSTALL MODE ⛑ ༔"
-    echo "༔ ༔"
-    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
-    echo
-    echo
-    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
-    echo "༔ ༔"
-    echo "༔ ⭐ MISE A JOUR DU SYSTEME ⭐ ༔"
-    echo "༔ ༔"
-    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
+    echo "⚪ MODE : CONFIGURATION D'UN NOUVEAU SERVEUR"
     echo
 
-    apt-get update && apt-get full-upgrade -y && apt-get autoremove
-
-    echo
-    echo "🎉 - Mise à jour du système terminé avec succès. 🎊"
+    # Mettre à jour le système et les paquets SNAP en une seule commande pour éviter une deuxième vérification de la liste des paquets
+    echo "👉 ETAPE 1 : Mise à jour du système et des paquets SNAP"
     echo
 
-    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
-    echo "༔ ༔"
-    echo "༔ ⭐ MISE A JOUR DES PAQUETS SNAP ⭐ ༔"
-    echo "༔ ༔"
-    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
+    apt-get update && apt-get upgrade -y && snap refresh && apt-get autoremove -y
 
-    snap refresh
+    # Installer tous les paquets nécessaires en une seule commande pour éviter d'exécuter plusieurs commandes distinctes
+    echo
+    echo "👉 ETAPE 2 : Installation de différents paquets avec APT"
+    echo
+    apt install nginx php8.2-fpm php8.2-common composer git curl -y
 
     echo
-    echo "🎉 - Mise à jour des paquets snap terminé avec succès 🎊"
-    echo
-
-    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
-    echo "༔ ༔"
-    echo "༔ ⭐ INSTALLATION DE DIFFERENTS PAQUETS ⭐ ༔"
-    echo "༔ ༔"
-    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
-    echo
-
-    apt install curl git composer php8.2-common php8.2-fpm nginx -y
-
-    echo
-    echo "🎉 - Installation des paquets terminé avec succès 🎊"
+    echo "🎉 - Configuration du nouveau serveur terminée avec succès. 🎊"
     echo
 
     exit
