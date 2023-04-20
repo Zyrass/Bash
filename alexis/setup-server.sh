@@ -1,175 +1,188 @@
 #!/bin/bash
 
-if [[ $(/usr/bin/id -u) -ne 0 ]];
-then
-    echo;
-    echo "Ce programme n'est pas démarrer en root";
-    echo "Fin du programme";
-    echo;
-    exit 1;
+# check si le programme est démarrer avec les droits utilisateurs
+if [[ $(/usr/bin/id -u) -ne 0 ]]; then
+    echo
+    echo "Ce programme n'est pas démarrer en root"
+    echo "Fin du programme"
+    echo
+    exit 1
 fi
 
-CHOIX=$1;
+# Configuration des paramètres passé au programme
+MODE=$1
+SET_USERNAME=$2
+SET_USERNAME_PASSWORD=$3
 
-fnc_create_user() {
+setNewUser() {
     clear
     echo
-    echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
-    echo "༔                                               ༔";
-    echo "༔              ✅ CREATE MODE ✅                ༔";
-    echo "༔                                               ༔";
-    echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
+    echo "⚪ MODE : AJOUT D'UN NOUVEL UTILISATEUR"
     echo
 
-    # Vérifier si des paramètres existes ou non
-    if [[ $# -eq 2 ]];
-    then
-        NEW_USERNAME=$1;
-        PASSWORD=$2;
-    else
+    # Vérifier si le paramètre USERNAME ($1) est fourni ainsi que le mot de passe ($2)
+    if [[ -z "$1" || -z "$2" ]]; then
+        echo "❌ - Veuillez fournir un nom d'utilisateur et un mot de passe. Fin du programme."
         echo
-        read -rp "Veuillez saisir le nom du nouvel utilisateur : " NEW_USERNAME;
-        read -sp "Veuillez saisir un mot de passe temporaire (Mode silentieux) : " PASSWORD;
-        echo
+        exit 1
     fi
 
+    GET_CREATE_NEW_USERNAME=$1
+    GET_CREATE_NEW_PASSWORD_FOR_NEW_USERNAME=$2
+
     # Vérification de la longueur du mot de passe
-    while [[ ${#PASSWORD} -lt 8 ]];
-    do
-        echo "Le mot de passe doit contenir au moins 8 caractères";
-        read -sp "Veuillez saisir un mot de passe temporaire (Mode silencieux) : " PASSWORD;
+    while [[ ${#GET_CREATE_NEW_PASSWORD_FOR_NEW_USERNAME} -lt 8 ]]; do
+        echo
+        echo "Le mot de passe doit contenir au moins 8 caractères"
+        read -sp "Veuillez re-saisir un mot de passe temporaire : " GET_CREATE_NEW_PASSWORD_FOR_NEW_USERNAME
         echo
     done
 
     # Affichage des informations saisies
     echo
-    echo Ok, voici les identifiants que tu souhaiterais obtenir pour ce nouvel utilisateur :
+    echo "Ok, voici les informations que vous souhaitez obtenir pour cet utilisateur :"
     echo
-    echo "Nom d'utilisateur souhaité : " ${NEW_USERNAME}
-    echo "Son mot de passe provisoire est hashé : " ${PASSWORD} #| sha256sum
+    echo "- NOM D'UTILISATEUR : " ${GET_CREATE_NEW_USERNAME}
+    echo "- MOT DE PASSE (temporaire) : " ${GET_CREATE_NEW_PASSWORD_FOR_NEW_USERNAME}
     echo
-    echo "Vérification si l\'utilisateur ${NEW_USERNAME} existe ou pas...";
-    echo
+    echo "Vérification si l'utilisateur ${GET_CREATE_NEW_USERNAME} existe déjà ou non..."
 
-    if id "$NEW_USERNAME" > /dev/null 2>&1; then
-        echo "❌ - Cet utilisateur existe déjà. Fin du programme.";
-        exit;
-    else
-        # Si l'utilisateur n'existe pas alors on va le créer
-        echo "❌ - Cet utilisateur n'existe pas. Création du user."; 
+    if id "$GET_CREATE_NEW_USERNAME" >/dev/null 2>&1; then
         echo
-        # Création du user avec la définition du shell bash par défaut.
-        useradd -m "$NEW_USERNAME" -s /bin/bash;
+        echo -e "❌ - L'utilisateur \"$GET_CREATE_NEW_USERNAME\" existe déjà. Fin du programme."
+        exit 1
+    else
+        echo "✅ - Cet utilisateur n'existe pas. Création en cours pour $GET_CREATE_NEW_USERNAME..."
+
+        # Création de l'utilisateur avec le shell bash par défaut.
+        useradd -m "$GET_CREATE_NEW_USERNAME" -s /bin/bash
 
         # Création d'un mot de passe temporaire
-        echo -e "$PASSWORD\n$PASSWORD" | passwd "$NEW_USERNAME";
+        echo -e "$GET_CREATE_NEW_PASSWORD_FOR_NEW_USERNAME\n$GET_CREATE_NEW_PASSWORD_FOR_NEW_USERNAME" | passwd "$GET_CREATE_NEW_USERNAME"
 
-        # Demande de changement de mot de passe au premier démarrage
-        chage -d 0 "$NEW_USERNAME";
+        if [[ "$?" == 1 ]]; then
+            echo
+            echo -e "❌ - Le mot de passe saisie n'est pas bon kévin..."
+            exit 1
+        elif [[ "$?" == 0 ]]; then
 
-        # echo "$USERNAME:$PASSWORD" | chpasswd;
-        # passwd -e "$NEW_USERNAME";
-        echo "✅ - L'utilisateur a été créer avec succès - Mot de passe temporaire qui devra être changé au premier démarrage est actuellement : $PASSWORD";
-    fi 
+            # Demande de changement de mot de passe au premier démarrage
+            chage -d 0 "$GET_CREATE_NEW_USERNAME"
+
+            echo "✅ - ${GET_CREATE_NEW_USERNAME} a été créer avec succès."
+            echo "✅ - Le mot de passe temporaire à bien été créer."
+            echo "✅ - Le mot de passe doit être changé au premier démarrage."
+            echo
+            exit 1
+        fi
+
+    fi
 }
 
-fnc_delete_user() {
+setDeleteUser() {
     clear
     echo
-    echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
-    echo "༔                                               ༔";
-    echo "༔                ❌ DELETE MODE ❌              ༔";
-    echo "༔                                               ༔";
-    echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
+    echo "⚪ MODE : SUPPRESSION D'UN UTILISATEUR"
+    echo
 
-    if [[ $# -eq 1 ]];
-    then
-        NEW_USERNAME=$1;
-    else
+    # Vérifier si le paramètre USERNAME ($1) est fourni
+    if [[ -z "$1" ]]; then
+        echo "❌ - Veuillez fournir un nom d'utilisateur à supprimer. Fin du programme."
         echo
-        read -rp "Veuillez saisir le nom de l'utilisateur que vous voulez supprimer : " NEW_USERNAME;
-        echo
+        exit 1
     fi
 
-    if id "$NEW_USERNAME" > /dev/null 2>&1; then
-        echo "✅ - Cet utilisateur existe bien, exécution de la suppression de $NEW_USERNAME et de son répertoire personnel"; 
-        deluser --remove-home $NEW_USERNAME;
-        exit;
+    # Paramètre de la fonction
+    GET_USERNAME=$1
+
+    #
+    if id "$GET_USERNAME" >/dev/null 2>&1; then
+        echo "✅ - $GET_USERNAME existe bien, suppression en cours..."
+
+        # Vérifier si le groupe de l'utilisateur est vide et le supprimer s'il est vide
+        USER_GROUP=$(id -gn $GET_USERNAME)
+        if [[ $(getent group $USER_GROUP) == "$USER_GROUP:*" ]]; then
+            echo "Le groupe $USER_GROUP est vide, il sera supprimé avec l'utilisateur."
+            groupdel $USER_GROUP
+        fi
+
+        deluser --remove-home $GET_USERNAME
+        exit 1
     else
-        echo "❌ - Cet utilisateur n'existe pas. Fin du programme.";
-        exit;
-    fi 
+        echo "❌ - Désolé, l'utilisateur \"$GET_USERNAME\" n'existe pas. Fin du programme."
+        echo
+        exit 1
+    fi
 }
 
-fnc_maintenance() {
+setInstallNewServer() {
     clear
     echo
-    echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
-    echo "༔                                               ༔";
-    echo "༔             ⛑  MAINTENANCE MODE ⛑             ༔";
-    echo "༔                                               ༔";
-    echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
+    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
+    echo "༔ ༔"
+    echo "༔ ⛑ INSTALL MODE ⛑ ༔"
+    echo "༔ ༔"
+    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
     echo
     echo
-    echo
-    echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
-    echo "༔                                               ༔";
-    echo "༔            ⭐ MISE A JOUR SYSTEM ⭐           ༔";
-    echo "༔                                               ༔";
-    echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
-    echo
-
-    apt-get update && apt-get full-upgrade -y && apt-get autoremove;
-
-    echo
-    echo "🎉 - Mise à jour du système terminé avec succès. 🎊";
+    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
+    echo "༔ ༔"
+    echo "༔ ⭐ MISE A JOUR DU SYSTEME ⭐ ༔"
+    echo "༔ ༔"
+    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
     echo
 
-    echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
-    echo "༔                                               ༔";
-    echo "༔     ⭐ MISE A JOUR DES PAQUETS SNAP ⭐        ༔";
-    echo "༔                                               ༔";
-    echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
+    apt-get update && apt-get full-upgrade -y && apt-get autoremove
+
+    echo
+    echo "🎉 - Mise à jour du système terminé avec succès. 🎊"
+    echo
+
+    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
+    echo "༔ ༔"
+    echo "༔ ⭐ MISE A JOUR DES PAQUETS SNAP ⭐ ༔"
+    echo "༔ ༔"
+    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
 
     snap refresh
 
     echo
-    echo "🎉 - Mise à jour des paquets snap terminé avec succès 🎊";
+    echo "🎉 - Mise à jour des paquets snap terminé avec succès 🎊"
     echo
 
-    echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
-    echo "༔                                               ༔";
-    echo "༔    ⭐ INSTALLATION DE DIFFERENTS PAQUETS ⭐   ༔";
-    echo "༔                                               ༔";
-    echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
+    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
+    echo "༔ ༔"
+    echo "༔ ⭐ INSTALLATION DE DIFFERENTS PAQUETS ⭐ ༔"
+    echo "༔ ༔"
+    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
     echo
 
-    apt  install curl git composer php8.1-common php8.1-fpm nginx -y
+    apt install curl git composer php8.2-common php8.2-fpm nginx -y
 
     echo
-    echo "🎉 - Installation des paquets terminé avec succès 🎊";
+    echo "🎉 - Installation des paquets terminé avec succès 🎊"
     echo
 
-    exit;
+    exit
 }
 
-fnc_nginx_host() {
+setNginxHost() {
     clear
     echo
-    echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
-    echo "༔                                               ༔";
-    echo "༔          ⛏  CREATION NGINX MODE ⛏           ༔";
-    echo "༔                                               ༔";
-    echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
+    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
+    echo "༔ ༔"
+    echo "༔ ⛏ CREATION NGINX MODE ⛏ ༔"
+    echo "༔ ༔"
+    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
     echo
 
     # Récupération des informations de l'utiilisateur
-    read -p "Entrez le nom d'hôte désiré : " HOSTNAME;
+    read -p "Entrez le nom d'hôte désiré : " HOSTNAME
 
     # Configuration de l'hôte dans Nginx
-    echo "Configuration de l'hôte dans Nginx...";
+    echo "Configuration de l'hôte dans Nginx..."
 
-    cat > /etc/nginx/sites-available/$HOSTNAME <<EOF
+    cat >/etc/nginx/sites-available/$HOSTNAME <<EOF
 
 server {
     listen 80;
@@ -197,9 +210,8 @@ EOF
     # Création du dossier pour le nouvel hôte
     mkdir -p /var/www/$HOSTNAME/html
 
-    if [ "$CREATE_INDEX" == "y" ] || [ "$CREATE_INDEX" == "Y" ];
-    then
-        echo -e "<html><body><h1>Bienvenue sur $HOSTNAME</h1><pre><?php print_r($_SERVER); ?></pre></body></html>" > /var/www/$HOSTNAME/html/index.html;
+    if [ "$CREATE_INDEX" == "y" ] || [ "$CREATE_INDEX" == "Y" ]; then
+        echo -e "<html><body><h1>Bienvenue sur $HOSTNAME</h1><pre><?php print_r($_SERVER); ?></pre></body></html>" >/var/www/$HOSTNAME/html/index.html
     fi
 
     systemctl reload nginx
@@ -210,40 +222,39 @@ EOF
     # Remplacer index.html par index.php
     sed -i 's/index.html/index.php/g' /etc/nginx/sites-available/$HOSTNAME
 
-    if [ "$?" -eq 1 ];
-    then
-        rm -rf /etc/nginx/sites-available/$HOSTNAME.conf;
-        rm -rf /etc/nginx/sites-enabled/$HOSTNAME;
+    if [ "$?" -eq 1 ]; then
+        rm -rf /etc/nginx/sites-available/$HOSTNAME.conf
+        rm -rf /etc/nginx/sites-enabled/$HOSTNAME
         echo
-        echo "✅ - Le nom d'hôte existait déjà, il a été supprimé";
+        echo "✅ - Le nom d'hôte existait déjà, il a été supprimé"
         # echo $?
         exit
 
     else
-        echo 
+        echo
         echo "Redémarrage de Nginx..."
         systemctl restart nginx
         echo
-        echo "🎉 Le nouvel hôte a été ajouté avec succès ! 🎊";
+        echo "🎉 Le nouvel hôte a été ajouté avec succès ! 🎊"
         echo
-        echo "Check du status du service";
+        echo "Check du status du service"
         echo
         # Redémarrer PHP-FPM et Nginx
         systemctl restart php8.1-fpm
         systemctl restart nginx
-        systemctl status nginx;
+        systemctl status nginx
         echo
     fi
-    
+
 }
 
-fnc_disk_space() {
+getDiskSpace() {
     clear
     echo
     echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
-    echo "༔                                               ༔";
-    echo "༔          🃏  ESPACE DISQUE MODE 🃏           ༔";
-    echo "༔                                               ༔";
+    echo "༔                                               ༔"
+    echo "༔          🃏  ESPACE DISQUE MODE 🃏           ༔"
+    echo "༔                                               ༔"
     echo "༻  °°°°°°°°°°° ༒  °°°°°°°°°°°  ༒  °°°°°°°°°°° ༺"
     echo
 
@@ -267,42 +278,44 @@ fnc_disk_space() {
     if [ $espace -lt $seuil ]; then
         # Construit le message à envoyer sur Discord
         message="Attention $prenom, l'espace disque est faible (${espace}% libre)."
-        
+
         # Envoie le message sur Discord via le webhook
         curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"$message\"}" https://discord.com/api/webhooks/XXX/YYY
     fi
 
 }
 
-fnc_cronjob_setup() {
+setCronjobSetup() {
     chmod +x /home/zyrass/www/setup-server.sh
 
     # Ajouter la tâche cron
-    (crontab -l -u zyrass; echo "*/15 * * * * ~/www/setup-server.sh disk") | crontab -
+    (
+        crontab -l -u zyrass
+        echo "*/15 * * * * ~/www/setup-server.sh disk"
+    ) | crontab -
     echo $?
     echo "Tâche cron ajoutée avec succès !"
 }
 
-if [[ "$CHOIX" = "create" || "$CHOIX" = "CREATE" ]];
-then
-    fnc_create_user;
-elif [[ "$CHOIX" = "delete" || "$CHOIX" = "DELETE" ]];
-then
-    fnc_delete_user;
-elif [[ "$CHOIX" = "maintenance" || "$CHOIX" = "MAINTENANCE" ]];
-then
-    fnc_maintenance;
-elif [[ "$CHOIX" = "nginx" || "$CHOIX" = "NGINX" ]];
-then
-    fnc_nginx_host;
-elif [[ "$CHOIX" = "disk" || "$CHOIX" = "DISK" ]];
-then
-    fnc_disk_space;
-elif [[ "$CHOIX" = "cronjob_setup" || "$CHOIX" = "CRONJOB_SETUP" ]];
-then
-    fnc_cronjob_setup;
+if [[ "$MODE" = "add_user" || "$MODE" = "ADD_USER" ]]; then
+    setNewUser $SET_USERNAME $SET_USERNAME_PASSWORD
+elif [[ "$MODE" = "delete_user" || "$MODE" = "DELETE_USER" ]]; then
+    setDeleteUser $SET_USERNAME
+elif [[ "$MODE" = "install" || "$MODE" = "INSTALL" ]]; then
+    setInstallNewServer
+elif [[ "$MODE" = "nginx_host" || "$MODE" = "NGINX_HOST" ]]; then
+    setNginxHost
+elif [[ "$MODE" = "disk_space" || "$MODE" = "DISK_SPACE" ]]; then
+    getDiskSpace
+elif [[ "$MODE" = "cronjob_setup" || "$MODE" = "CRONJOB_SETUP" ]]; then
+    setCronjobSetup
 else
-    echo "Désolé mais seul six (6) choix sont possible: <create> ; <delete> ; <maintenance> ; <nginx> ; <disk> ; <cronjob_setup>";
-    exit;
+    echo "Désolé mais seul six (6) MODE sont possible:"
+    echo -e "\tadd_user"
+    echo -e "\tdelete_user"
+    echo -e "\tinstall"
+    echo -e "\tnginx_host"
+    echo -e "\tdisk_space"
+    echo -e "\tcronjob_setup"
+    exit 1
 fi
-
