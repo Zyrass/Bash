@@ -171,7 +171,7 @@ setInstallNewServer() {
 getDiskSpace() {
     clear
     echo
-    echo "MODE : Gestion de l'espace disque"
+    echo "⚪ MODE : AFFICHAGE DE L'ESPACE DISQUE"
     echo
 
     # Seuil d'espace disque libre (en pourcentage)
@@ -186,7 +186,10 @@ getDiskSpace() {
         # Construit le message à envoyer sur Discord
         # message="\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n\n྅   📢 - Alain:\tL'espace disque dispose actuellement de $espace% d'espace libre.\n྅   📢 - Alain:\tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅   📢 - Alain:\tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅   📢 - Alain:\tSi cela arrive, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !.\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n"
 
-        message="\n# Alain GUILLON\n\n\n> Alexis, tu es la variable la plus constante dans mon équation de réussite en programmation.\n> Je te remercie de ta patience, de ton expertise et de ta passion pour l'enseignement.\n> Bonne chance pour tes futurs projets !\n\n## ESPACE DISQUE PAS ASSEZ FAIBLE ( $espace% disponible )\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n྅ \t\t📢 \tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅ \t\t📢 \tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅ \t\t📢 \tSi cela arrive... Veuillez prévenir ma femme qu'elle me verra moins souvent 👀 ou pas...\n྅ \t\t📢 \n྅ \t\t📢 \tMais, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !\n྅ \t\t📢 \tRestons positif, je suis un développeur un peu fou sur les bords\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺"
+        mydate=$(
+            date +"%A %d %B %Y - %T"
+        )
+        message="\n# Alain GUILLON ( $mydate )\n&nbsp;> Alexis, tu es la variable la plus constante dans mon équation de réussite en programmation.\n> Je te remercie de ta patience, de ton expertise et de ta passion pour l'enseignement.\n> Bonne chance pour tes futurs projets !\n\n## ESPACE DISQUE PAS ASSEZ FAIBLE ( $espace% disponible )\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n྅ \t\t📢 \tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅ \t\t📢 \tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅ \t\t📢 \tSi cela arrive... Veuillez prévenir ma femme qu'elle me verra moins souvent 👀 ou pas...\n྅ \t\t📢 \n྅ \t\t📢 \tMais, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !\n྅ \t\t📢 \tRestons positif, je suis un développeur un peu fou sur les bords\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺"
 
         echo "$message"
 
@@ -197,55 +200,56 @@ getDiskSpace() {
 }
 
 setCronjobSetup() {
+    clear
+    echo
+    echo "⚪ MODE : CREATION D'UNE TACHE CRON POUR AFFICHER L'ESPACE DISQUE"
+    echo
+
     # Donner l'autorisation de lecture et d'exécution du script pour tous les utilisateurs
-    chmod +x /home/zyrass/www/it-akademy/cours/Bash/alexis/setup-server.sh
+    # chmod +x /home/zyrass/www/it-akademy/cours/Bash/alexis/setup-server.sh
 
     # Ajouter la tâche cron pour l'utilisateur zyrass
-    (
-        sudo -u zyrass crontab -l                                       # Récupérer la liste des tâches cron de l'utilisateur zyrass
-        echo "*/15 * * * * /home/zyrass/www/setup-server.sh disk_space" # Ajouter la nouvelle tâche cron
-    ) | sudo -u zyrass crontab -                                        # Réinstaller la liste des tâches cron pour l'utilisateur zyrass
 
-    sudo service cron reload
-
+    crontab -l >mycron
+    echo "*/15 * * * * /home/zyrass/www/it-akademy/cours/Bash/alexis/setup-server.sh disk_space" >>mycron
+    crontab mycron
+    rm mycron
+    # service cron restart
     echo "Tâche cron ajoutée avec succès pour l'utilisateur zyrass !"
 }
 
 setNginxHost() {
     clear
     echo
-    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
-    echo "༔ ༔"
-    echo "༔ ⛏ CREATION NGINX MODE ⛏ ༔"
-    echo "༔ ༔"
-    echo "༻ °°°°°°°°°°° ༒ °°°°°°°°°°° ༒ °°°°°°°°°°° ༺"
+    echo "MODE : CONFIGURATION D'UN SERVEUR NGINX"
     echo
 
-    # Récupération des informations de l'utiilisateur
-    read -p "Entrez le nom d'hôte désiré : " HOSTNAME
+    # Récupération des informations du nom de domaine saisie en paramètre
+    local domain=$1
 
     # Configuration de l'hôte dans Nginx
-    echo "Configuration de l'hôte dans Nginx..."
 
-    cat >/etc/nginx/sites-available/$HOSTNAME <<EOF
+    cat >/etc/nginx/sites-available/"$domain" <<EOF
+    server {
+        listen 80;
+        listen [::]:80;
+        
+        server_name "$domain";
+        root /var/www/html/"$domain";
+        index index.html index.php;
 
-server {
-    listen 80;
-    listen [::];
-    server_name ${HOSTNAME};
-    root /var/www/${HOSTNAME}/html;
-    index index.html index.php;
+        location / {
+            try_files \$uri/ =404;
+        }
 
-    location / {
-        try_files \$uri/ =404;
+        location ~ \.php$ {
+            include snippets/fastcgi-php.conf;
+            fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+        }
     }
-
-    location ~ \.php$ {
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/run/php/php8.1-fpm.sock;
-    }
-}
 EOF
+
+    echo "127.0.0.1 $domain" >>/etc/hosts
 
     # Activation du nouvel hôte
     ln -s /etc/nginx/sites-available/$HOSTNAME /etc/nginx/sites-enabled/
@@ -307,7 +311,7 @@ install | INSTALL)
     setInstallNewServer
     ;;
 nginx_host | NGINX_HOST)
-    setNginxHost
+    setNginxHost "$2"
     ;;
 disk_space | DISK_SPACE)
     getDiskSpace
