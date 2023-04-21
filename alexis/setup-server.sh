@@ -13,7 +13,7 @@ fi
 GET_MODE=$1
 
 # Fonction pour afficher l'aide
-get_help() {
+mode_help() {
     echo
     echo "⛑ Utilisation : script.sh [MODE|OPTION] [...PARAMETRES]"
 
@@ -36,8 +36,7 @@ get_help() {
     echo
 }
 
-setNewUser() {
-    clear
+mode_add_user() {
     echo
     echo "⚪ MODE : AJOUT D'UN NOUVEL UTILISATEUR"
     echo
@@ -99,8 +98,7 @@ setNewUser() {
     fi
 }
 
-setDeleteUser() {
-    clear
+mode_delete_user() {
     echo
     echo "⚪ MODE : SUPPRESSION D'UN UTILISATEUR"
     echo
@@ -138,9 +136,7 @@ setDeleteUser() {
     fi
 }
 
-setInstallNewServer() {
-    # Efface l'écran et affiche le titre de la fonction
-    clear
+mode_install() {
     echo
     echo "⚪ MODE : CONFIGURATION D'UN NOUVEAU SERVEUR"
     echo
@@ -168,8 +164,7 @@ setInstallNewServer() {
     exit
 }
 
-getDiskSpace() {
-    clear
+mode_disk_space() {
     echo
     echo "⚪ MODE : AFFICHAGE DE L'ESPACE DISQUE"
     echo
@@ -189,7 +184,7 @@ getDiskSpace() {
         mydate=$(
             date +"%A %d %B %Y - %T"
         )
-        message="\n# Alain GUILLON ( $mydate )\n&nbsp;> Alexis, tu es la variable la plus constante dans mon équation de réussite en programmation.\n> Je te remercie de ta patience, de ton expertise et de ta passion pour l'enseignement.\n> Bonne chance pour tes futurs projets !\n\n## ESPACE DISQUE PAS ASSEZ FAIBLE ( $espace% disponible )\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n྅ \t\t📢 \tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅ \t\t📢 \tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅ \t\t📢 \tSi cela arrive... Veuillez prévenir ma femme qu'elle me verra moins souvent 👀 ou pas...\n྅ \t\t📢 \n྅ \t\t📢 \tMais, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !\n྅ \t\t📢 \tRestons positif, je suis un développeur un peu fou sur les bords\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺"
+        message="\n# Alain GUILLON ( $mydate ) - Prochaine mise à jour dans 30min\n💬\tAlexis, tu es la variable la plus constante dans mon équation de réussite en programmation.\n💬\t Je te remercie de ta patience, de ton expertise et de ta passion pour l'enseignement.\n💬\t Bonne chance pour tes futurs projets !\n\n## ESPACE DISQUE PAS ASSEZ FAIBLE ( $espace% disponible )\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n྅ \t\t📢 \tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅ \t\t📢 \tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅ \t\t📢 \tSi cela arrive... Veuillez prévenir ma femme qu'elle me verra moins souvent 👀 ou pas...\n྅ \t\t📢 \n྅ \t\t📢 \tMais, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !\n྅ \t\t📢 \tRestons positif, je suis un développeur un peu fou sur les bords\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺"
 
         echo "$message"
 
@@ -199,8 +194,7 @@ getDiskSpace() {
     curl -H "Content-Type: application/json" -d "{ \"content\": \"$message\" }" https://discord.com/api/webhooks/1098570523002277899/InkvgtZDAReTRLy-wrHJtigOgYhkDXZ7y4-S_vElPzKgDMOpFxMyjDkWgIE0lnRx8stI
 }
 
-setCronjobSetup() {
-    clear
+mode_cronjob_setup() {
     echo
     echo "⚪ MODE : CREATION D'UNE TACHE CRON POUR AFFICHER L'ESPACE DISQUE"
     echo
@@ -211,15 +205,115 @@ setCronjobSetup() {
     # Ajouter la tâche cron pour l'utilisateur zyrass
 
     crontab -l >mycron
-    echo "*/15 * * * * /home/zyrass/www/it-akademy/cours/Bash/alexis/setup-server.sh disk_space" >>mycron
+    echo "*/30 * * * * /home/zyrass/www/it-akademy/cours/Bash/alexis/setup-server.sh disk_space" >>mycron
     crontab mycron
     rm mycron
     # service cron restart
     echo "Tâche cron ajoutée avec succès pour l'utilisateur zyrass !"
 }
 
-setNginxHost() {
-    clear
+mode_nginx_host2() {
+    # Vérification des paramètres fournis
+    if [ $# -ne 1 ]; then
+        echo "Usage: $0 -add-domain nom_de_domaine.com" >&2
+        exit 1
+    fi
+
+    # Récupération de l'argument
+    domain_name="$1"
+
+    echo "Configuration du domaine $1"
+
+    # Création de l'arborescence du dossier du site web et et du fichier html
+    mkdir /var/www/$domain_name
+    echo "<!DOCTYPE html>
+            <html lang="fr">
+            <head>
+                <meta charset="UTF-8">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>$domain_name</title>
+                <style>
+                    html, body {
+                        width: 100%;
+                        height: 100%;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    body {
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        background-color: rgb(226, 233, 241);
+                    }
+                    h1 {
+                        color: rgb(0, 65, 126);
+                    }
+                    h2 {
+                        color: rgb(255, 72, 0);
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Bienvenue sur ton nouveau domaine</h1>
+                <h2>$domain_name</h2>
+                <div>
+                    <pre>
+                        <?php print_r(\$_SERVER); ?>
+                    </pre>
+                </div>
+            </body>
+            </html>" >/var/www/$domain_name/index.php
+
+    # Création du fichier de configuration du nouveau nom de domaine
+    echo "server {
+        listen 80;
+        server_name $domain_name www.$domain_name;
+        root /var/www/$domain_name;
+        index index.php index.html index.htm;
+
+        location ~ \.php$ {
+            include snippets/fastcgi-php.conf;
+            fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        }
+    }" >/etc/nginx/sites-available/$domain_name
+
+    # Test de la syntax du fichier de configuration
+    nginx -t
+    if [ $? -ne 0 ]; then
+        echo "La configuration du nom de domaine a échoué" >&2
+        exit 1
+    fi
+    # Création du lien symbolique dans sites-enabled
+    ln -s /etc/nginx/sites-available/$domain_name /etc/nginx/sites-enabled/
+
+    # Redémarrage du server nginx
+    systemctl restart nginx
+    if [ $? -ne 0 ]; then
+        echo "Le redémarrage du server nginx a échoué" >&2
+        exit 1
+    fi
+
+    # Configuration du pare-feu pour autoriser le HTTP et HTTPS
+    ufw allow 'Nginx Full'
+    if [ $? -ne 0 ]; then
+        echo "La configuration du pare-feu a échoué" >&2
+        exit 1
+    fi
+
+    # Ajout de la correspondance du nom de domaine avec l'ip localhost
+    sed -i "1i127.0.0.1    $domain_name" /etc/hosts
+    if [ $? -ne 0 ]; then
+        echo "La configuration du fichier hosts a échoué" >&2
+        exit 1
+    fi
+
+    echo "Le domaine est en ligne http://$domain_name"
+}
+
+mode_nginx_host() {
+
     echo
     echo "MODE : CONFIGURATION D'UN SERVEUR NGINX"
     echo
@@ -227,97 +321,138 @@ setNginxHost() {
     # Récupération des informations du nom de domaine saisie en paramètre
     local domain=$1
 
+    mv "/etc/nginx/site-enabled/default" "/etc/nginx/site-enabled/default.back"
+
     # Configuration de l'hôte dans Nginx
+    cat >"/etc/nginx/sites-available/${domain}" <<EOF
+server {
+	listen 80;
+	listen [::]:80;
 
-    cat >/etc/nginx/sites-available/"$domain" <<EOF
-    server {
-        listen 80;
-        listen [::]:80;
+    server_name ${domain};
+	root /var/www/${domain};
+	index index.php index.html;
+
+	location / {
         
-        server_name "$domain";
-        root /var/www/html/"$domain";
-        index index.html index.php;
+	}
 
-        location / {
-            try_files \$uri/ =404;
-        }
-
-        location ~ \.php$ {
-            include snippets/fastcgi-php.conf;
-            fastcgi_pass unix:/run/php/php8.2-fpm.sock;
-        }
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
     }
+}
 EOF
 
-    echo "127.0.0.1 $domain" >>/etc/hosts
+    echo "127.0.0.1 ${domain}" >>/etc/hosts
+    # sed -i "1i127.0.0.1    $domain" /etc/hosts
 
     # Activation du nouvel hôte
-    ln -s /etc/nginx/sites-available/$HOSTNAME /etc/nginx/sites-enabled/
-
-    read -p "Voulez-vous créer un fichier index.html pour cet hôte ? (y/n) " CREATE_INDEX
+    ln -s "/etc/nginx/sites-available/${domain}" "/etc/nginx/sites-enabled"
 
     # Création du dossier pour le nouvel hôte
-    mkdir -p /var/www/$HOSTNAME/html
+    mkdir -p "/var/www/${domain}"
 
-    if [ "$CREATE_INDEX" == "y" ] || [ "$CREATE_INDEX" == "Y" ]; then
-        echo -e "<html><body><h1>Bienvenue sur $HOSTNAME</h1><pre><?php print_r($_SERVER); ?></pre></body></html>" >/var/www/$HOSTNAME/html/index.html
-    fi
-
-    systemctl reload nginx
+    echo "<!DOCTYPE html>
+            <html lang="fr">
+            <head>
+                <meta charset="UTF-8">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>$domain</title>
+                <style>
+                    html, body {
+                        width: 100%;
+                        height: 100%;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    body {
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        background-color: rgb(226, 233, 241);
+                    }
+                    h1 {
+                        color: rgb(0, 65, 126);
+                    }
+                    h2 {
+                        color: rgb(255, 72, 0);
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Bienvenue sur ton nouveau domaine</h1>
+                <h2>$domain</h2>
+                <div>
+                    <pre>
+                        <?php print_r(\$_SERVER); ?>
+                    </pre>
+                </div>
+            </body>
+            </html>" >/var/www/$domain/index.php
 
     # Changer le propriétaire des fichiers pour PHP-FPM
-    chown -R www-data:www-data /var/www/$HOSTNAME/html
+    chown -R www-data:www-data "/var/www/${domain}"
 
     # Remplacer index.html par index.php
-    sed -i 's/index.html/index.php/g' /etc/nginx/sites-available/$HOSTNAME
+    # sed -i 's/index.html/index.php/g' /etc/nginx/sites-available/"$domain"
 
     if [ "$?" -eq 1 ]; then
-        rm -rf /etc/nginx/sites-available/$HOSTNAME.conf
-        rm -rf /etc/nginx/sites-enabled/$HOSTNAME
+        rm -rf "/etc/nginx/sites-available/${domain}.conf"
+        rm -rf "/etc/nginx/sites-enabled/${domain}"
         echo
         echo "✅ - Le nom d'hôte existait déjà, il a été supprimé"
-        # echo $?
         exit
-
     else
         echo
         echo "Redémarrage de Nginx..."
-        systemctl restart nginx
+        service nginx reload
         echo
-        echo "🎉 Le nouvel hôte a été ajouté avec succès ! 🎊"
+        echo "🎉 Le nouvel hôte (${domain}) a été ajouté avec succès ! 🎊"
         echo
         echo "Check du status du service"
         echo
+        nslookup "$domain"
+        echo
+
+        # Test de la syntax du fichier de configuration
+        nginx -t
+
+        echo "Le domaine est en ligne http://$domain"
+
         # Redémarrer PHP-FPM et Nginx
-        systemctl restart php8.1-fpm
+        service php8.2-fpm restart
+        service nginx reload
         systemctl restart nginx
-        systemctl status nginx
+        service php8.2-fpm status
+        service nginx status
         echo
     fi
-
 }
 
 case $GET_MODE in
 add_user | ADD_USER)
-    setNewUser "$2" "$3"
+    mode_add_user "$2" "$3"
     ;;
 delete_user | DELETE_USER)
-    setDeleteUser "$2"
+    mode_delete_user "$2"
     ;;
 -h | --help | -H | --HELP)
     get_help
     ;;
 install | INSTALL)
-    setInstallNewServer
+    mode_install
     ;;
 nginx_host | NGINX_HOST)
-    setNginxHost "$2"
+    mode_nginx_host "$2"
     ;;
 disk_space | DISK_SPACE)
-    getDiskSpace
+    mode_disk_space
     ;;
 cronjob_setup | CRONJOB_SETUP)
-    setCronjobSetup
+    mode_cronjob_setup
     ;;
 *)
     echo "Désolé mais seuls six (7) modes sont possibles:"
