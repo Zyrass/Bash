@@ -33,9 +33,8 @@ get_help() {
     echo
 }
 
+# Constante paramètre
 GET_MODE=$1
-SET_USERNAME=$2
-SET_PASSWORD=$3
 
 setNewUser() {
     clear
@@ -43,19 +42,19 @@ setNewUser() {
     echo "⚪ MODE : AJOUT D'UN NOUVEL UTILISATEUR"
     echo
 
+    local username=$1
+    local password=$2
+
     # Vérifier si le paramètre USERNAME ($1) et le mot de passe ($2) sont fournis
-    [[ -z "$1" || -z "$2" ]] && {
+    [[ -z "$username" || -z "$password" ]] && {
         echo "❌ - Veuillez fournir un nom d'utilisateur et un mot de passe."
         echo "Fin du programme."
         exit 1
     }
 
-    GET_NEW_USERNAME=$1
-    GET_NEW_PASSWORD=$2
-
     # Vérification de la longueur du mot de passe
-    while ((${#GET_NEW_PASSWORD} < 8)); do
-        read -rsp $'\nLe mot de passe doit contenir au moins 8 caractères. Veuillez re-saisir un mot de passe temporaire : ' GET_NEW_PASSWORD
+    while ((${#password} < 8)); do
+        read -rsp $'\nLe mot de passe doit contenir au moins 8 caractères.\nVeuillez re-saisir un mot de passe temporaire : ' GET_NEW_PASSWORD
         echo
     done
 
@@ -63,35 +62,35 @@ setNewUser() {
     echo
     echo "Ok, voici les informations que vous souhaitez obtenir pour cet utilisateur :"
     echo
-    echo "- NOM D'UTILISATEUR : $GET_NEW_USERNAME"
-    echo "- MOT DE PASSE (temporaire) : $GET_NEW_PASSWORD"
+    echo "- NOM D'UTILISATEUR : $username"
+    echo "- MOT DE PASSE (temporaire) : $password"
     echo
-    echo "Vérification si l'utilisateur $GET_NEW_USERNAME existe déjà ou non..."
+    echo "Vérification si l'utilisateur $username existe déjà ou non..."
 
     # Vérification si l'utilisateur existe déjà
-    if id "$GET_NEW_USERNAME" >/dev/null 2>&1; then
+    if id "$username" >/dev/null 2>&1; then
         echo
-        echo -e "❌ - L'utilisateur \"$GET_NEW_USERNAME\" existe déjà. Fin du programme."
+        echo -e "❌ - L'utilisateur \"$username\" existe déjà. Fin du programme."
         exit 1
     else
-        echo "✅ - Cet utilisateur n'existe pas. Création en cours pour $GET_NEW_USERNAME..."
+        echo "✅ - Cet utilisateur n'existe pas. Création en cours pour $username..."
 
         # Création de l'utilisateur avec le shell bash par défaut.
-        useradd -m "$GET_NEW_USERNAME" -s /bin/bash
+        useradd -m "$username" -s /bin/bash
 
         # Création d'un mot de passe temporaire
-        echo -e "$GET_NEW_PASSWORD\n$GET_NEW_PASSWORD" | passwd "$GET_NEW_USERNAME"
+        echo -e "$password\n$password" | passwd "$username"
 
         # Vérification du mot de passe
         if [[ "$?" == 1 ]]; then
             echo
-            echo -e "❌ - Le mot de passe saisi n'est pas valide. Fin du programme."
+            echo -e "❌ - Le mot de passe saisi n'est pas valide.\nFin du programme."
             exit 1
         else
             # Demande de changement de mot de passe au premier démarrage
-            chage -d 0 "$GET_NEW_USERNAME"
+            chage -d 0 "$username"
 
-            echo "✅ - $GET_NEW_USERNAME a été créé avec succès."
+            echo "✅ - $username a été créé avec succès."
             echo "✅ - Le mot de passe temporaire a été créé avec succès."
             echo "✅ - Le mot de passe doit être changé au premier démarrage."
             echo
@@ -106,38 +105,37 @@ setDeleteUser() {
     echo "⚪ MODE : SUPPRESSION D'UN UTILISATEUR"
     echo
 
+    # Paramètre de la fonction
+    local username=$1
+
     # Vérifier si le paramètre USERNAME ($1) est fourni
-    if [[ -z "$1" ]]; then
-        echo "❌ - Veuillez fournir un nom d'utilisateur à supprimer. Fin du programme."
+    if [[ -z "$username" ]]; then
+        echo -e "❌ - Veuillez fournir un nom d'utilisateur à supprimer.\nFin du programme."
         echo
         exit 1
     fi
 
-    # Paramètre de la fonction
-    GET_USERNAME=$1
-
     # Vérifier si l'utilisateur existe
-    if id "$GET_USERNAME" >/dev/null 2>&1; then
-        echo "✅ - $GET_USERNAME existe bien, suppression en cours..."
+    if id "$username" >/dev/null 2>&1; then
+        echo "✅ - $username existe bien, suppression en cours..."
 
         # Vérifier si le groupe de l'utilisateur est vide et le supprimer s'il est vide
-        USER_GROUP=$(id -gn $GET_USERNAME)
+        USER_GROUP=$(id -gn username)
         if getent group "$USER_GROUP" | grep -q "$USER_GROUP:.*"; then
             echo "Le groupe $USER_GROUP est vide, il sera supprimé avec l'utilisateur."
-            groupdel $USER_GROUP
+            groupdel "$USER_GROUP"
         fi
 
         # Supprimer l'utilisateur
-        deluser --remove-home $GET_USERNAME
+        deluser --remove-home "$username"
 
-        echo "🎉 - Suppression de l'utilisateur $GET_USERNAME terminée avec succès. 🎊"
+        echo "🎉 - Suppression de l'utilisateur $username terminée avec succès. 🎊"
         echo
     else
-        echo "❌ - Désolé, l'utilisateur \"$GET_USERNAME\" n'existe pas. Fin du programme."
+        echo "❌ - Désolé, l'utilisateur \"$username\" n'existe pas. Fin du programme."
         echo
         exit 1
     fi
-
 }
 
 setInstallNewServer() {
@@ -147,17 +145,21 @@ setInstallNewServer() {
     echo "⚪ MODE : CONFIGURATION D'UN NOUVEAU SERVEUR"
     echo
 
+    echo "👉 ETAPE 1 : Ajout du repository pour php (ppa:ondrej/php)"
+    add-apt-repository ppa:ondrej/php -y
+
     # Mettre à jour le système et les paquets SNAP en une seule commande pour éviter une deuxième vérification de la liste des paquets
-    echo "👉 ETAPE 1 : Mise à jour du système et des paquets SNAP"
+    echo "👉 ETAPE 2 : Mise à jour du système et des paquets SNAP"
     echo
 
     apt-get update && apt-get upgrade -y && snap refresh && apt-get autoremove -y
 
     # Installer tous les paquets nécessaires en une seule commande pour éviter d'exécuter plusieurs commandes distinctes
     echo
-    echo "👉 ETAPE 2 : Installation de différents paquets avec APT"
+    echo "👉 ETAPE 3 : Installation de différents paquets avec APT"
     echo
-    apt install nginx php8.2-fpm php8.2-common composer git curl -y
+
+    apt install software-properties-common nginx php8.2-fpm php8.2-common composer git curl -y
 
     echo
     echo "🎉 - Configuration du nouveau serveur terminée avec succès. 🎊"
@@ -258,16 +260,22 @@ getDiskSpace() {
     seuil=5
 
     # Récupère l'espace disque disponible en pourcentage
-    espace=$(df -h | grep /dev/sda1 | awk '{print $5}' | cut -d'%' -f1)
+    espace=$(df -h / | cut -d " " -f 22 | cut -d "%" -f 1 | tail -n1)
 
-    # Vérifie si l'espace disque disponible est inférieur au seuil
-    if [ $espace -lt $seuil ]; then
+    if [[ "$espace" -gt "$seuil" ]]; then
+
+        # Vérifie si l'espace disque disponible est inférieur au seuil
         # Construit le message à envoyer sur Discord
-        message="Attention, l'espace disque est faible (${espace}% libre)."
+        # message="\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n\n྅   📢 - Alain:\tL'espace disque dispose actuellement de $espace% d'espace libre.\n྅   📢 - Alain:\tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅   📢 - Alain:\tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅   📢 - Alain:\tSi cela arrive, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !.\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n"
 
-        # Envoie le message sur Discord via le webhook
-        curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"$message\"}" https://discord.com/api/webhooks/1098570523002277899/InkvgtZDAReTRLy-wrHJtigOgYhkDXZ7y4-S_vElPzKgDMOpFxMyjDkWgIE0lnRx8stI
+        message="\n# Alain GUILLON\n\n> Alexis, tu es la variable la plus constante dans mon équation de réussite en programmation.\n> Je te remercie de ta patience, de ton expertise et de ta passion pour l'enseignement.\n> Bonne chance pour tes futurs projets !\n\n## ESPACE DISQUE PAS ASSEZ FAIBLE ( $espace% disponible )\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n྅ \t\t📢 \tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅ \t\t📢 \tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅ \t\t📢 \tSi cela arrive... Veuillez prévenir ma femme qu'elle me verra moins souvent 👀 ou pas...\n྅ \t\t📢 \n྅ \t\t📢 \tMais, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !\n྅ \t\t📢 \tRestons positif, je suis un développeur un peu fou sur les bords\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺"
+
+        echo "$message"
+
     fi
+
+    # Envoie le message sur Discord via le webhook
+    curl -H "Content-Type: application/json" -d "{ \"content\": \"$message\" }" https://discord.com/api/webhooks/1098570523002277899/InkvgtZDAReTRLy-wrHJtigOgYhkDXZ7y4-S_vElPzKgDMOpFxMyjDkWgIE0lnRx8stI
 }
 
 setCronjobSetup() {
@@ -275,7 +283,7 @@ setCronjobSetup() {
 
     # Ajouter la tâche cron
     (
-        crontab -l -u zyrass
+        crontab -l -u "$USER"
         echo "*/15 * * * * ~/www/setup-server.sh disk"
     ) | crontab -
     echo $?
@@ -284,10 +292,10 @@ setCronjobSetup() {
 
 case $GET_MODE in
 add_user | ADD_USER)
-    setNewUser "$SET_USERNAME" "$SET_USERNAME_PASSWORD"
+    setNewUser "$2" "$3"
     ;;
 delete_user | DELETE_USER)
-    setDeleteUser "$SET_USERNAME"
+    setDeleteUser "$2"
     ;;
 -h | --help)
     get_help
