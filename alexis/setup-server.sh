@@ -9,6 +9,9 @@ if [[ $(/usr/bin/id -u) -ne 0 ]]; then
     exit 1
 fi
 
+# Constante paramètre
+GET_MODE=$1
+
 # Fonction pour afficher l'aide
 get_help() {
     echo
@@ -32,9 +35,6 @@ get_help() {
     echo " 📖 cronjob_setup - Configurer une tâche cron."
     echo
 }
-
-# Constante paramètre
-GET_MODE=$1
 
 setNewUser() {
     clear
@@ -168,6 +168,49 @@ setInstallNewServer() {
     exit
 }
 
+getDiskSpace() {
+    clear
+    echo
+    echo "MODE : Gestion de l'espace disque"
+    echo
+
+    # Seuil d'espace disque libre (en pourcentage)
+    seuil=5
+
+    # Récupère l'espace disque disponible en pourcentage
+    espace=$(df -h / | cut -d " " -f 22 | cut -d "%" -f 1 | tail -n1)
+
+    if [[ "$espace" -gt "$seuil" ]]; then
+
+        # Vérifie si l'espace disque disponible est inférieur au seuil
+        # Construit le message à envoyer sur Discord
+        # message="\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n\n྅   📢 - Alain:\tL'espace disque dispose actuellement de $espace% d'espace libre.\n྅   📢 - Alain:\tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅   📢 - Alain:\tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅   📢 - Alain:\tSi cela arrive, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !.\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n"
+
+        message="\n# Alain GUILLON\n\n\n> Alexis, tu es la variable la plus constante dans mon équation de réussite en programmation.\n> Je te remercie de ta patience, de ton expertise et de ta passion pour l'enseignement.\n> Bonne chance pour tes futurs projets !\n\n## ESPACE DISQUE PAS ASSEZ FAIBLE ( $espace% disponible )\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n྅ \t\t📢 \tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅ \t\t📢 \tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅ \t\t📢 \tSi cela arrive... Veuillez prévenir ma femme qu'elle me verra moins souvent 👀 ou pas...\n྅ \t\t📢 \n྅ \t\t📢 \tMais, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !\n྅ \t\t📢 \tRestons positif, je suis un développeur un peu fou sur les bords\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺"
+
+        echo "$message"
+
+    fi
+
+    # Envoie le message sur Discord via le webhook
+    curl -H "Content-Type: application/json" -d "{ \"content\": \"$message\" }" https://discord.com/api/webhooks/1098570523002277899/InkvgtZDAReTRLy-wrHJtigOgYhkDXZ7y4-S_vElPzKgDMOpFxMyjDkWgIE0lnRx8stI
+}
+
+setCronjobSetup() {
+    # Donner l'autorisation de lecture et d'exécution du script pour tous les utilisateurs
+    chmod +x /home/zyrass/www/it-akademy/cours/Bash/alexis/setup-server.sh
+
+    # Ajouter la tâche cron pour l'utilisateur zyrass
+    (
+        sudo -u zyrass crontab -l                                       # Récupérer la liste des tâches cron de l'utilisateur zyrass
+        echo "*/15 * * * * /home/zyrass/www/setup-server.sh disk_space" # Ajouter la nouvelle tâche cron
+    ) | sudo -u zyrass crontab -                                        # Réinstaller la liste des tâches cron pour l'utilisateur zyrass
+
+    sudo service cron reload
+
+    echo "Tâche cron ajoutée avec succès pour l'utilisateur zyrass !"
+}
+
 setNginxHost() {
     clear
     echo
@@ -250,46 +293,6 @@ EOF
 
 }
 
-getDiskSpace() {
-    clear
-    echo
-    echo "MODE : Gestion de l'espace disque"
-    echo
-
-    # Seuil d'espace disque libre (en pourcentage)
-    seuil=5
-
-    # Récupère l'espace disque disponible en pourcentage
-    espace=$(df -h / | cut -d " " -f 22 | cut -d "%" -f 1 | tail -n1)
-
-    if [[ "$espace" -gt "$seuil" ]]; then
-
-        # Vérifie si l'espace disque disponible est inférieur au seuil
-        # Construit le message à envoyer sur Discord
-        # message="\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n\n྅   📢 - Alain:\tL'espace disque dispose actuellement de $espace% d'espace libre.\n྅   📢 - Alain:\tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅   📢 - Alain:\tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅   📢 - Alain:\tSi cela arrive, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !.\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n"
-
-        message="\n# Alain GUILLON\n\n> Alexis, tu es la variable la plus constante dans mon équation de réussite en programmation.\n> Je te remercie de ta patience, de ton expertise et de ta passion pour l'enseignement.\n> Bonne chance pour tes futurs projets !\n\n## ESPACE DISQUE PAS ASSEZ FAIBLE ( $espace% disponible )\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n྅ \t\t📢 \tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅ \t\t📢 \tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅ \t\t📢 \tSi cela arrive... Veuillez prévenir ma femme qu'elle me verra moins souvent 👀 ou pas...\n྅ \t\t📢 \n྅ \t\t📢 \tMais, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !\n྅ \t\t📢 \tRestons positif, je suis un développeur un peu fou sur les bords\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺"
-
-        echo "$message"
-
-    fi
-
-    # Envoie le message sur Discord via le webhook
-    curl -H "Content-Type: application/json" -d "{ \"content\": \"$message\" }" https://discord.com/api/webhooks/1098570523002277899/InkvgtZDAReTRLy-wrHJtigOgYhkDXZ7y4-S_vElPzKgDMOpFxMyjDkWgIE0lnRx8stI
-}
-
-setCronjobSetup() {
-    chmod +x /home/zyrass/www/setup-server.sh
-
-    # Ajouter la tâche cron
-    (
-        crontab -l -u "$USER"
-        echo "*/15 * * * * ~/www/setup-server.sh disk"
-    ) | crontab -
-    echo $?
-    echo "Tâche cron ajoutée avec succès !"
-}
-
 case $GET_MODE in
 add_user | ADD_USER)
     setNewUser "$2" "$3"
@@ -297,7 +300,7 @@ add_user | ADD_USER)
 delete_user | DELETE_USER)
     setDeleteUser "$2"
     ;;
--h | --help)
+-h | --help | -H | --HELP)
     get_help
     ;;
 install | INSTALL)
