@@ -62,10 +62,10 @@ mode_help() {
     echo -e " 📖 \033[92m--help\033[0m        - Option longue pour afficher l'aide.\n"
 
     echo -e "📌 \033[1mLes modes disponible sont :\033[0m\n"
-    echo -e " 📖 \033[92madd_user\033[0m      - Ajouter un nouvel utilisateur. PARAMETRES : USERNAME PASSWORD"
-    echo -e " 📖 \033[92mdelete_user\033[0m   - Supprimer un utilisateur. PARAMETRES : USERNAME"
+    echo -e " 📖 \033[92madd_user\033[0m      - Ajouter un nouvel utilisateur. \033[1m2 PARAMETRES OBLIGATOIRE\033[0m : \033[96mUSERNAME PASSWORD\033[0m"
+    echo -e " 📖 \033[92mdelete_user\033[0m   - Supprimer un utilisateur. \033[1m1 PARAMETRE OBLIGATOIRE\033[0m : \033[96mUSERNAME\033[0m"
     echo -e " 📖 \033[92minstall\033[0m       - Installer un nouveau serveur."
-    echo -e " 📖 \033[92mnginx_host\033[0m    - Configurer un nouveau serveur hôte nginx."
+    echo -e " 📖 \033[92mnginx_host\033[0m    - Configurer un nouveau serveur hôte nginx. \033[1m1 PARAMETRE OBLIGATOIRE\033[0m : \033[96mNOM_DU_DOMAINE\033[0m"
     echo -e " 📖 \033[92mdisk_space\033[0m    - Afficher l'espace disque disponible."
     echo -e " 📖 \033[92mcronjob_setup\033[0m - Configurer une tâche cron.\n"
 
@@ -75,6 +75,7 @@ mode_help() {
 
 # Fonction pour le mode : add_user param1 param2
 mode_add_user() {
+    clear
 
     # Définition des variable locale à la fonction.
     # Il s'agit des paramètres qui sont retourné.
@@ -82,21 +83,31 @@ mode_add_user() {
     local password=$2
 
     # Vérifier si le paramètre USERNAME ($1) et le mot de passe ($2) sont fournis
-    [[ -z "$username" || -z "$password" ]] && {
-        echo -e "\n\033[1m\n❌ ECHEC DU DEMARRAGE DU MODE:\033[0m \033[94madd_user\033[0m\n"
-        echo -e "\033[92mVeuillez fournir un nom d'utilisateur et un mot de passe.\033[0m"
-        echo -e "\033[92mFin du programme.\033[0m\n"
+    [[ -z "$username" && -z "$password" ]] && {
+        echo -e "\n\033[1m\n ❌ - ECHEC DU DEMARRAGE DU MODE:\033[0m \033[94madd_user\033[0m\n"
+        echo -e "\033[93m 💬 - Veuillez fournir un nom d'utilisateur et un mot de passe avec aux moins 8 caractères pour continuer.\033[0m"
+        echo -e "\033[93m 💬 - Fin du programme.\033[0m\n"
         exit 1
     }
 
-    echo "\033[1m\n✅ MODE DEMARRER AVEC SUCCES:\033[0m \033[93madd_user\n\033[0m"
+    # Si un seul paramètre alors prévenir qu'il manque un mot de passe
+    [[ -z "$password" ]] && {
+        echo -e "\n\033[1m\n ❌ - ECHEC DU DEMARRAGE DU MODE:\033[0m \033[94madd_user\033[0m\n"
+        echo -e " 💬 - \033[93m\033[1m$username\033[0m \033[93mdoit obligatoirement avoir un mot de passe avec aux moins 8 caractères.\033[0m"
+        echo -e " 💬 - \033[93m\033[1m$USER\033[0m\033[93m, veuillez relancer le script avec un paramètre en plus qui sera le mot de passe temporaire. Merci.\033[0m"
+        echo -e " 💬 - \033[93mFin du programme.\033[0m\n"
+        exit 1
+    }
 
     # Vérification de la longueur du mot de passe
     while ((${#password} < 8)); do
-        echo -rp '\nLe mot de passe doit contenir au moins 8 caractères.\n'
-        read -rsp $'\nVeuillez re-saisir un mot de passe temporaire : ' GET_NEW_PASSWORD
+        echo -e "\n\033[1m\n ❌ - ECHEC DU DEMARRAGE DU MODE:\033[0m \033[94madd_user\033[0m\n"
+        echo -rp '\033[95mLe mot de passe doit contenir au moins 8 caractères.\033[0m\n'
+        read -rsp $'\nVeuillez de nouveau saisir un mot de passe temporaire : ' GET_NEW_PASSWORD
         echo
     done
+
+    echo "\033[1m\n✅ MODE DEMARRER AVEC SUCCES:\033[0m \033[93madd_user\n\033[0m"
 
     # Récapitulatif des informations saisies en paramètres
     echo "\nOk, voici les informations que vous souhaitez obtenir pour cet utilisateu:\n"
