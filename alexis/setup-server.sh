@@ -270,125 +270,51 @@ mode_install() {
     exit
 }
 
-mode_nginx_host2() {
-    # Vérification des paramètres fournis
-    if [ $# -ne 1 ]; then
-        echo "Usage: $0 -add-domain nom_de_domaine.com" >&2
-        exit 1
-    fi
-
-    # Récupération de l'argument
-    domain_name="$1"
-
-    echo "Configuration du domaine $1"
-
-    # Création de l'arborescence du dossier du site web et et du fichier html
-    mkdir /var/www/$domain_name
-    echo "<!DOCTYPE html>
-            <html lang="fr">
-            <head>
-                <meta charset="UTF-8">
-                <meta http-equiv="X-UA-Compatible" content="IE=edge">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>$domain_name</title>
-                <style>
-                    html, body {
-                        width: 100%;
-                        height: 100%;
-                        margin: 0;
-                        padding: 0;
-                    }
-                    body {
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        align-items: center;
-                        background-color: rgb(226, 233, 241);
-                    }
-                    h1 {
-                        color: rgb(0, 65, 126);
-                    }
-                    h2 {
-                        color: rgb(255, 72, 0);
-                    }
-                </style>
-            </head>
-            <body>
-                <h1>Bienvenue sur ton nouveau domaine</h1>
-                <h2>$domain_name</h2>
-                <div>
-                    <pre>
-                        <?php print_r(\$_SERVER); ?>
-                    </pre>
-                </div>
-            </body>
-            </html>" >/var/www/$domain_name/index.php
-
-    # Création du fichier de configuration du nouveau nom de domaine
-    echo "server {
-        listen 80;
-        server_name $domain_name www.$domain_name;
-        root /var/www/$domain_name;
-        index index.php index.html index.htm;
-
-        location ~ \.php$ {
-            include snippets/fastcgi-php.conf;
-            fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
-        }
-    }" >/etc/nginx/sites-available/$domain_name
-
-    # Test de la syntax du fichier de configuration
-    nginx -t
-    if [ $? -ne 0 ]; then
-        echo "La configuration du nom de domaine a échoué" >&2
-        exit 1
-    fi
-    # Création du lien symbolique dans sites-enabled
-    ln -s /etc/nginx/sites-available/$domain_name /etc/nginx/sites-enabled/
-
-    # Redémarrage du server nginx
-    systemctl restart nginx
-    if [ $? -ne 0 ]; then
-        echo "Le redémarrage du server nginx a échoué" >&2
-        exit 1
-    fi
-
-    # Configuration du pare-feu pour autoriser le HTTP et HTTPS
-    ufw allow 'Nginx Full'
-    if [ $? -ne 0 ]; then
-        echo "La configuration du pare-feu a échoué" >&2
-        exit 1
-    fi
-
-    # Ajout de la correspondance du nom de domaine avec l'ip localhost
-    sed -i "1i127.0.0.1    $domain_name" /etc/hosts
-    if [ $? -ne 0 ]; then
-        echo "La configuration du fichier hosts a échoué" >&2
-        exit 1
-    fi
-
-    echo "Le domaine est en ligne http://$domain_name"
-}
-
+# Fonction pour le mode : nginx_host
 mode_nginx_host() {
+    # Définition de la variable locale de la fonction.
+    # Il s'agit de l'arguments passé qui sera exploité uniquement dans cette fonction.
+    local domain_name=$1
 
-    echo
-    echo "MODE : CONFIGURATION D'UN SERVEUR NGINX"
-    echo
+    # Si un seul paramètre alors prévenir qu'il manque un mot de passe
+    [[ -z "$domaine_name" ]] && {
+        echo -e "\n\033[1m\n ❌ - ECHEC DU DEMARRAGE DU MODE:\033[0m \033[94mnginx_host\033[0m\n"
+        echo -e " 💬 - \033[93mLe nom de domaine est obligatoire.\033[0m"
+        echo -e " 💬 - \033[93m\033[1m$USER\033[0m\033[93m, veuillez relancer le script avec un paramètre en plus qui sera le nom de domaine souhaité. Merci.\033[0m"
+        echo -e " 💬 - \033[93mFin du programme.\033[0m\n"
+        exit 1
+    }
 
-    # Récupération des informations du nom de domaine saisie en paramètre
-    local domain=$1
+    echo -e "\033[1m\n ✅ MODE DEMARRER AVEC SUCCES:\033[0m \033[94mnginx_host\n\033[0m"
 
-    mv "/etc/nginx/site-enabled/default" "/etc/nginx/site-enabled/default.back"
+    # Création d'un répertoire de sauvegarde pour le dossier par défaut du dossier site-enabled
+    echo -e " ⚪ \033[1;36mCréation d'un répertoire pour sauvegarder le fichier \"default\" situé dans /etc/nginx/site-enabled\033[0m"
+    mkdir -p "/etc/nginx/back"
+    if [ $? -eq 0 ]; then
+        echo -e " ✅ \033[1m\033[1;32m- Création du répertoire réussi avec succès\033[0m"
+    else
+        echo -e " ❌ \033[1m\033[1;31m- création impossible, le répertoire existe déjà.\033[0m"
+    fi
+
+    # Dépalcement du fichier "default" dans le répertoire "back" fraîchement créer
+    echo -e "\n ⚪ \033[1;36mDéplacement du fichier \"default\" situé dans /etc/nginx/site-enabled vers /etc/nginx/back\033[0m\n"
+    mv "/etc/nginx/site-enabled/default" "/etc/nginx/back/default"
+    if [ $? -eq 0 ]; then
+        echo -e " ✅ \033[1m\033[1;32m- Déplacement du fichier default réussi avec succès\033[0m"
+    else
+        echo -e " ❌ \033[1m\033[1;31m- Déplacement du fichier default impossible, celui-ci existe déjà.\033[0m"
+    fi
 
     # Configuration de l'hôte dans Nginx
-    cat >"/etc/nginx/sites-available/${domain}" <<EOF
+    # Dépalcement du fichier "default" dans le répertoire "back" fraîchement créer
+    echo -e "\n ⚪ \033[1;36mConfiguration de l'hôte dans Nginx\033[0m\n"
+    cat >"/etc/nginx/sites-available/${domain_name}" <<EOF
 server {
 	listen 80;
 	listen [::]:80;
 
-    server_name ${domain};
-	root /var/www/${domain};
+    server_name ${domain_name};
+	root /var/www/${domain_name};
 	index index.php index.html;
 
 	location / {
@@ -402,94 +328,151 @@ server {
 }
 EOF
 
-    echo "127.0.0.1 ${domain}" >>/etc/hosts
-    # sed -i "1i127.0.0.1    $domain" /etc/hosts
+    # Test de la syntax du fichier de configuration
+    nginx -t
+    if [ $? -ne 0 ]; then
+        # Dépalcement du fichier "default" dans le répertoire "back" fraîchement créer
+        echo -e " ❌ \033[1m\033[1;31m- La configuration du nom de domaine a échoué\033[0m\n" >&2
+
+        # Suppression des fichiers si une erreur à été trouvé ainsi on peut directement relancer un test avec le même nom de domaine
+        rm -r "/etc/nginx/sites-available/${domain_name}.conf"
+        rm -r "/etc/nginx/sites-enabled/${domain_name}"
+        rm -r "/var/www/${domain_name}"
+        exit 1
+    fi
+
+    # Modification du fichier hosts
+    echo -e "\n ⚪ \033[1;36mAjout du nom d'hôte dans le fichier hosts situé dans /etc/hosts.\033[0m"
+    echo "127.0.0.1 ${domain_name}" >>/etc/hosts
+    if [ $? -eq 0 ]; then
+        echo -e " ✅ \033[1m\033[1;32m- Inscription du nom de domaine (${domaine_name}) dans le fichier hosts réussi avec succès\033[0m"
+    else
+        echo -e " ❌ \033[1m\033[1;31m- Inscription du nom de domaine (${domaine_name}) dans le fichier hosts impossible.\033[0m"
+    fi
 
     # Activation du nouvel hôte
-    ln -s "/etc/nginx/sites-available/${domain}" "/etc/nginx/sites-enabled"
+    echo -e "\n ⚪ \033[1;36mCréation d'un lien symbolique du nom de domaine ${domain_name} vers le dossier /etc/nginx/sites-enabled\033[0m\n"
+    ln -s "/etc/nginx/sites-available/${domain_name}" "/etc/nginx/sites-enabled"
+    if [ $? -eq 0 ]; then
+        echo -e " ✅ \033[1m\033[1;32m- Activation du lien symbolique réussi avec succès\033[0m"
+    else
+        echo -e " ❌ \033[1m\033[1;31m- Activation du lien symbolique impossible, celui-ci existe déjà.\033[0m"
+    fi
 
     # Création du dossier pour le nouvel hôte
-    mkdir -p "/var/www/${domain}"
+    echo -e "\n ⚪ \033[1;36mCréation du répertoire ${domain_name} dans /var/www/\033[0m"
+    mkdir -p "/var/www/${domain_name}"
+    if [ $? -eq 0 ]; then
+        echo -e " ✅ \033[1m\033[1;32m- Création du répertoire ${domain_name} dans /var/www/ réussi avec succès\033[0m"
+    else
+        echo -e " ❌ \033[1m\033[1;31m- Création du répertoire ${domain_name} dans /var/www/ impossible, celui-ci existe déjà.\033[0m"
+    fi
 
+    # Création de la page index.php qui sera utilisé pour ce nom de domaine.
+    echo -e "\n ⚪ \033[1;36mCréation du fichier index.php qui se trouvera dans le répertoire /var/www/${domain_name}/\033[0m"
     echo "<!DOCTYPE html>
-            <html lang="fr">
+            <html lang=\"fr\">
             <head>
-                <meta charset="UTF-8">
-                <meta http-equiv="X-UA-Compatible" content="IE=edge">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>$domain</title>
+                <meta charset=\"UTF-8\">
+                <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">
+                <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+                <title>${domain_name}</title>
                 <style>
-                    html, body {
-                        width: 100%;
-                        height: 100%;
+                    * {
+                        box-sizing: border-box;
                         margin: 0;
                         padding: 0;
                     }
                     body {
+                        min-height: 100vh;
                         display: flex;
                         flex-direction: column;
                         justify-content: center;
                         align-items: center;
-                        background-color: rgb(226, 233, 241);
+                        background-color: #333;
                     }
                     h1 {
-                        color: rgb(0, 65, 126);
+                        color: #f1f1f1;
                     }
                     h2 {
-                        color: rgb(255, 72, 0);
+                        color: plum;
+                        margin: 20px 0;
+                    }
+                    div {
+                        width: 80vw;
+                        background-color: #111;
+                    }
+                    pre {
+                        padding: 1%;
+                        color: lime;
                     }
                 </style>
             </head>
             <body>
-                <h1>Bienvenue sur ton nouveau domaine</h1>
-                <h2>$domain</h2>
+                <h1>NGINX te propose ton nouveau nom de domaine : ${domain_name}</h1>
+                <h2>Affichage de la configuration serveur</h2>
                 <div>
                     <pre>
                         <?php print_r(\$_SERVER); ?>
                     </pre>
                 </div>
             </body>
-            </html>" >/var/www/$domain/index.php
+            </html>" >/var/www/${domain_name}/index.php
+    if [ $? -eq 0 ]; then
+        echo -e " ✅ \033[1m\033[1;32m- Création de la page index.php dans /var/www/ réussi avec succès\033[0m"
+    else
+        echo -e " ❌ \033[1m\033[1;31m- Création de la page index.php dans /var/www/ impossible, celui-ci existe déjà.\033[0m"
+    fi
 
     # Changer le propriétaire des fichiers pour PHP-FPM
-    chown -R www-data:www-data "/var/www/${domain}"
-
-    # Remplacer index.html par index.php
-    # sed -i 's/index.html/index.php/g' /etc/nginx/sites-available/"$domain"
-
-    if [ "$?" -eq 1 ]; then
-        rm -rf "/etc/nginx/sites-available/${domain}.conf"
-        rm -rf "/etc/nginx/sites-enabled/${domain}"
-        echo
-        echo "✅ - Le nom d'hôte existait déjà, il a été supprimé"
-        exit
+    echo -e "\n ⚪ \033[1;36mChangement du propriétaire pour le répertoire /var/www/${domain_name} afin que PHP-FPM puisse l'utiliser sans problème.\033[0m"
+    chown -R www-data:www-data "/var/www/${domain_name}"
+    if [ $? -eq 0 ]; then
+        echo -e " ✅ \033[1m\033[1;32m- Changement de propriétaire pour le répertoire /var/www réussi avec succès\033[0m"
     else
-        echo
-        echo "Redémarrage de Nginx..."
-        service nginx reload
-        echo
-        echo "🎉 Le nouvel hôte (${domain}) a été ajouté avec succès ! 🎊"
-        echo
-        echo "Check du status du service"
-        echo
-        nslookup "$domain"
-        echo
-
-        # Test de la syntax du fichier de configuration
-        nginx -t
-
-        echo "Le domaine est en ligne http://$domain"
-
-        # Redémarrer PHP-FPM et Nginx
-        service php8.2-fpm restart
-        service nginx reload
-        systemctl restart nginx
-        service php8.2-fpm status
-        service nginx status
-        echo
+        echo -e " ❌ \033[1m\033[1;31m- Changement de propriétaire pour le répertoire /var/www impossible.\033[0m"
     fi
+
+    echo -e "\n ⚪ \033[1;36mredémarrage de Nginx (systemctl et services).\033[0m"
+    systemctl restart nginx
+    service nginx reload
+    if [ $? -eq 0 ]; then
+        echo -e " ✅ \033[1m\033[1;32m- Redémarrage de NGINX réussi avec succès\033[0m"
+    else
+        echo -e " ❌ \033[1m\033[1;31m- Redémarrage de NGINX impossible\033[0m"
+    fi
+
+    echo -e "\n ⚪ \033[1;36mredémarrage de php8.2-fpm (services).\033[0m"
+    service php8.2-fpm restart
+    if [ $? -eq 0 ]; then
+        echo -e " ✅ \033[1m\033[1;32m- Redémarrage de PHP8.2-FPM réussi avec succès\033[0m"
+    else
+        echo -e " ❌ \033[1m\033[1;31m- Redémarrage de PHP8.2-FPM impossible\033[0m"
+    fi
+
+    echo -e "\n ⚪ \033[1;36mVérification de l'état du nom de domaine.\033[0m"
+    nslookup "${domain_name}"
+    if [ $? -eq 0 ]; then
+        echo -e " ✅ \033[1m\033[1;32m- Vérification de l'état du nom de domaine réussi avec succès\033[0m"
+    else
+        echo -e " ❌ \033[1m\033[1;31m- Vérification de l'état du nom de domaine impossible\033[0m\n"
+    fi
+
+    echo -e "\n 🎉 \033[1;33mCongratulation le nom d'hôte est fonctionnel :P\033[0m"
+    echo -e " 🎉 \033[1;33m- Le nouvel hôte (${domain_name}) a été ajouté avec succès il est accessible à cette adresse :\033[0m \033[1m\033[1;35mhttp://${domain_name}\033[0m \033[1;33m!\033[0m 🎊"
+
+    echo -e "\n 👀 \033[4m\033[1;30mAffichage des services histoire de confirmer le bon fonctionnement\033[0m\n"
+    service php8.2-fpm status
+    service nginx status
+    if [ $? -eq 0 ]; then
+        echo -e " 🎉 \033[1m\033[1;32m- Affichage des services NGINX et PHP8.2-FPM réussi avec succès\033[0m 🎊"
+    else
+        echo -e " ❌ \033[1m\033[1;31m- Affichage des services NGINX et PHP8.2-FPM impossible\033[0m"
+    fi
+    exit
 }
 
+# Fonction pour le mode : disk_space
 mode_disk_space() {
     echo
     echo "⚪ MODE : AFFICHAGE DE L'ESPACE DISQUE"
@@ -567,14 +550,18 @@ cronjob_setup | CRONJOB_SETUP)
     mode_cronjob_setup
     ;;
 *)
-    echo "Désolé mais seuls six (7) modes sont possibles:"
-    echo -e "\t-h ou --help"
-    echo -e "\tadd_user"
-    echo -e "\tdelete_user"
-    echo -e "\tinstall"
-    echo -e "\tnginx_host"
-    echo -e "\tdisk_space"
-    echo -e "\tcronjob_setup"
+    echo -e "\n\033[1m\n ❌ - ECHEC DU DEMARRAGE DU SCRIPT\033[0m\n"
+
+    echo -e " 📌 \033[1mLes modes disponible sont :\033[0m\n"
+    echo -e " 📖 \033[92madd_user\033[0m      - Ajouter un nouvel utilisateur. \033[1m2 PARAMETRES OBLIGATOIRE\033[0m : \033[96mUSERNAME PASSWORD\033[0m"
+    echo -e " 📖 \033[92mdelete_user\033[0m   - Supprimer un utilisateur. \033[1m1 PARAMETRE OBLIGATOIRE\033[0m : \033[96mUSERNAME\033[0m"
+    echo -e " 📖 \033[92minstall\033[0m       - Installer un nouveau serveur."
+    echo -e " 📖 \033[92mnginx_host\033[0m    - Configurer un nouveau serveur hôte nginx. \033[1m1 PARAMETRE OBLIGATOIRE\033[0m : \033[96mNOM_DU_DOMAINE\033[0m"
+    echo -e " 📖 \033[92mdisk_space\033[0m    - Afficher l'espace disque disponible."
+    echo -e " 📖 \033[92mcronjob_setup\033[0m - Configurer une tâche cron.\n"
+
+    echo -e "\t\033[93mVeuillez relancer ce script avec le mode désiré et les paramètres si nécessaires.\033[0m"
+    echo -e "\t\033[93mMerci à bientôt Alain.\033[0m\n"
     exit 1
     ;;
 esac
