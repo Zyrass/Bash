@@ -1,78 +1,117 @@
 #!/bin/bash
 
-# check si le programme est démarrer avec les droits utilisateurs
+# Vérification si le programme est bien démarrer en super administrateur auquel cas, celui-ci affiche un message avec une petite notice de comment faire.
 if [[ $(/usr/bin/id -u) -ne 0 ]]; then
-    echo
-    echo "Ce programme n'est pas démarrer en root"
-    echo "Fin du programme"
-    echo
-    exit 1
+    clear
+    echo -e "\n❌ \033[31m- Désolé, mais ce programme doit être démarrer en super administrateur...\n\033[0m"
+    echo -e "\033[1m📌 - Mais... Comment faire ?\033[0m\n"
+
+    echo -e "\033[4mSIGNATURE:\033[0m\t \033[92msudo \033[91msetup-server.sh [MODE] [OPTIONS]?\033[0m"
+    echo -e "\033[4mAIDE (courte):\033[0m\t \033[92msudo \033[91msetup-server.sh \033[92m-h\033[0m"
+    echo -e "\033[4mAIDE (longue):\033[0m\t \033[92msudo \033[91msetup-server.sh \033[92m--help\n\033[0m"
+
+    echo -e "Fin du programme.\n"
+    exit
 fi
 
-# Constante paramètre
+# Définition des constantes utililisée(s) dans ce programme.
 GET_MODE=$1
 
-# Fonction pour afficher l'aide
+# ================================================================================================================
+#                                   CONFIGURATION DES FONCTIONS A VENIR
+# ================================================================================================================
+#   NOMS DES FONCTIONS      ||  DES PARAMETRES ?            ||  DESCRIPTION COURTE
+# ================================================================================================================
+#                           ||                              ||  Permet de créer un nouvel utilisateur
+#   add_user                ||  OUI (2) username password   ||  le mot de passe est temporaire et sera
+#                           ||                              ||  à changer obligatoire à la 1ère connexion.
+# ================================================================================================================
+#                           ||                              ||  Permet de supprimer un utilisateur ainsi
+#   delete_user             ||  OUI (1) username            ||  que tout son espace de travail sera
+#                           ||                              ||  immédiatement supprimé.
+# ================================================================================================================
+#   install                 ||  NON                         ||  Permet d'installer une nouvelle configuration
+#                           ||                              ||  serveur en une seule commande.
+# ================================================================================================================
+#   nginx_host              ||  OUI (1) domain_name         ||  Permet de configurer un serveur nginx
+#                           ||                              ||  avec l'ajout d'un nouveau nom de domaine.
+# ================================================================================================================
+#   disk_space              ||  NON                         ||  Permet d'afficher instantanément l'espace
+#                           ||                              ||  restant sur une machine quelconque.
+# ================================================================================================================
+#   cronjob_setup           ||  NON                         ||  Permet de configurer une tâche cron
+#                           ||                              ||  afin d'afficher l'espace disque sur un
+#                           ||                              ||  serveur discord.
+# ===============================================================================================================
+#   -h                      ||  NON                         ||  Permet d'afficher l'aide du programme.
+# ================================================================================================================
+#   --help                  ||  NON                         ||  Permet d'afficher l'aide du programme.
+# ================================================================================================================
+
+# Fonction pour le mode : -h
+# Fonction pour le mode : --help
 mode_help() {
-    echo
-    echo "⛑ Utilisation : script.sh [MODE|OPTION] [...PARAMETRES]"
+    clear
+    echo -e "\n\033[1mMODE : AIDE SUR L'UTILISATION DU PROGRAMME\033[0m\n"
 
-    echo
-    echo "📌 Obtenir de l'aide :"
-    echo
+    echo -e "📌 \033[1mSIGNATURE DU PROGRAMME :\033[0m\n"
+    echo -e "\t\033[91msudo setup-server.sh [MODE] [OPTIONS]?\033[0m\n"
 
-    echo " 📖 -h            - Option courte pour afficher l'aide."
-    echo " 📖 --help        - Option longue pour afficher l'aide."
-    echo
+    echo -e "📌 \033[1mPOUR OBTENIR DE L'AIDE - (\033[30m\033[3m C'est celle que tu vois à l'écran même \033[0m) :\033[0m\n"
+    echo -e " 📖 \033[92m-h\033[0m            - Option courte pour afficher l'aide."
+    echo -e " 📖 \033[92m--help\033[0m        - Option longue pour afficher l'aide.\n"
 
-    echo "📌 Les modes valides sont :"
-    echo
-    echo " 📖 add_user      - Ajouter un nouvel utilisateur. PARAMETRES : USERNAME PASSWORD"
-    echo " 📖 delete_user   - Supprimer un utilisateur. PARAMETRES : USERNAME"
-    echo " 📖 install       - Installer un nouveau serveur."
-    echo " 📖 nginx_host    - Configurer un nouveau serveur hôte nginx."
-    echo " 📖 disk_space    - Afficher l'espace disque disponible."
-    echo " 📖 cronjob_setup - Configurer une tâche cron."
-    echo
+    echo -e "📌 \033[1mLes modes disponible sont :\033[0m\n"
+    echo -e " 📖 \033[92madd_user\033[0m      - Ajouter un nouvel utilisateur. PARAMETRES : USERNAME PASSWORD"
+    echo -e " 📖 \033[92mdelete_user\033[0m   - Supprimer un utilisateur. PARAMETRES : USERNAME"
+    echo -e " 📖 \033[92minstall\033[0m       - Installer un nouveau serveur."
+    echo -e " 📖 \033[92mnginx_host\033[0m    - Configurer un nouveau serveur hôte nginx."
+    echo -e " 📖 \033[92mdisk_space\033[0m    - Afficher l'espace disque disponible."
+    echo -e " 📖 \033[92mcronjob_setup\033[0m - Configurer une tâche cron.\n"
+
+    echo -e "\t\033[93mVeuillez relancer ce script avec le mode désiré et les paramètres si nécessaires.\033[0m"
+    echo -e "\t\033[93mMerci à bientôt Alain.\033[0m\n"
 }
 
+# Fonction pour le mode : add_user param1 param2
 mode_add_user() {
-    echo
-    echo "⚪ MODE : AJOUT D'UN NOUVEL UTILISATEUR"
-    echo
 
+    # Définition des variable locale à la fonction.
+    # Il s'agit des paramètres qui sont retourné.
     local username=$1
     local password=$2
 
     # Vérifier si le paramètre USERNAME ($1) et le mot de passe ($2) sont fournis
     [[ -z "$username" || -z "$password" ]] && {
-        echo "❌ - Veuillez fournir un nom d'utilisateur et un mot de passe."
-        echo "Fin du programme."
+        echo -e "\n\033[1m\n❌ ECHEC DU DEMARRAGE DU MODE:\033[0m \033[94madd_user\033[0m\n"
+        echo -e "\033[92mVeuillez fournir un nom d'utilisateur et un mot de passe.\033[0m"
+        echo -e "\033[92mFin du programme.\033[0m\n"
         exit 1
     }
 
+    echo "\033[1m\n✅ MODE DEMARRER AVEC SUCCES:\033[0m \033[93madd_user\n\033[0m"
+
     # Vérification de la longueur du mot de passe
     while ((${#password} < 8)); do
-        read -rsp $'\nLe mot de passe doit contenir au moins 8 caractères.\nVeuillez re-saisir un mot de passe temporaire : ' GET_NEW_PASSWORD
+        echo -rp '\nLe mot de passe doit contenir au moins 8 caractères.\n'
+        read -rsp $'\nVeuillez re-saisir un mot de passe temporaire : ' GET_NEW_PASSWORD
         echo
     done
 
-    # Affichage des informations saisies
-    echo
-    echo "Ok, voici les informations que vous souhaitez obtenir pour cet utilisateur :"
-    echo
+    # Récapitulatif des informations saisies en paramètres
+    echo "\nOk, voici les informations que vous souhaitez obtenir pour cet utilisateu:\n"
+
     echo "- NOM D'UTILISATEUR : $username"
     echo "- MOT DE PASSE (temporaire) : $password"
-    echo
-    echo "Vérification si l'utilisateur $username existe déjà ou non..."
 
-    # Vérification si l'utilisateur existe déjà
+    echo "\nAvant de créer cet utilisateur ($username), je dois m'assurer si il existe ou non...\n"
+
+    # Vérification de l'existance de l'utilisateur
     if id "$username" >/dev/null 2>&1; then
-        echo
-        echo -e "❌ - L'utilisateur \"$username\" existe déjà. Fin du programme."
+        echo -e "\n❌ - L'utilisateur \"$username\" existe déjà.\nAucune création n'a été réalisé. Ceci marque donc la fin du programme.\n"
         exit 1
     else
-        echo "✅ - Cet utilisateur n'existe pas. Création en cours pour $username..."
+        echo "✅ - $username, n'existe pas. Création en cours..."
 
         # Création de l'utilisateur avec le shell bash par défaut.
         useradd -m "$username" -s /bin/bash
@@ -184,14 +223,16 @@ mode_disk_space() {
         mydate=$(
             date +"%A %d %B %Y - %T"
         )
-        message="\n# Alain GUILLON ( $mydate ) - Prochaine mise à jour dans 30min\n💬\tAlexis, tu es la variable la plus constante dans mon équation de réussite en programmation.\n💬\t Je te remercie de ta patience, de ton expertise et de ta passion pour l'enseignement.\n💬\t Bonne chance pour tes futurs projets !\n\n## ESPACE DISQUE PAS ASSEZ FAIBLE ( $espace% disponible )\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n྅ \t\t📢 \tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅ \t\t📢 \tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅ \t\t📢 \tSi cela arrive... Veuillez prévenir ma femme qu'elle me verra moins souvent 👀 ou pas...\n྅ \t\t📢 \n྅ \t\t📢 \tMais, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !\n྅ \t\t📢 \tRestons positif, je suis un développeur un peu fou sur les bords\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺"
+        message="\n# Alain GUILLON ( $mydate ) - Prochaine mise à jour dans 1 heure\n💬\tAlexis, tu es la variable la plus constante dans mon équation de réussite en programmation.\n💬\t Je te remercie de ta patience, de ton expertise et de ta passion pour l'enseignement.\n💬\t Bonne chance pour tes futurs projets !\n\n## ESPACE DISQUE PAS ASSEZ FAIBLE ( $espace% disponible )\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n྅ \t\t📢 \tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅ \t\t📢 \tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅ \t\t📢 \tSi cela arrive... Veuillez prévenir ma femme qu'elle me verra moins souvent 👀 ou pas...\n྅ \t\t📢 \n྅ \t\t📢 \tMais, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !\n྅ \t\t📢 \tRestons positif, je suis un développeur un peu fou sur les bords\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺"
 
         echo "$message"
 
     fi
 
     # Envoie le message sur Discord via le webhook
-    curl -H "Content-Type: application/json" -d "{ \"content\": \"$message\" }" https://discord.com/api/webhooks/1098570523002277899/InkvgtZDAReTRLy-wrHJtigOgYhkDXZ7y4-S_vElPzKgDMOpFxMyjDkWgIE0lnRx8stI
+    # curl -H "Content-Type: application/json" -d "{ \"content\": \"$message\" }" https://discord.com/api/webhooks/1098570523002277899/InkvgtZDAReTRLy-wrHJtigOgYhkDXZ7y4-S_vElPzKgDMOpFxMyjDkWgIE0lnRx8stI
+
+    curl -H "Content-Type: application/json" -d "{ \"content\": \"$message\" }" https://discord.com/api/webhooks/1099275717839171594/Njj9b6_dgIwNpekavRsh5L4p_24VSkO4HFrTDbRF9MHkh2XFU3lpPq1-xRBLbJDTBRd8
 }
 
 mode_cronjob_setup() {
@@ -199,17 +240,21 @@ mode_cronjob_setup() {
     echo "⚪ MODE : CREATION D'UNE TACHE CRON POUR AFFICHER L'ESPACE DISQUE"
     echo
 
-    # Donner l'autorisation de lecture et d'exécution du script pour tous les utilisateurs
-    # chmod +x /home/zyrass/www/it-akademy/cours/Bash/alexis/setup-server.sh
-
-    # Ajouter la tâche cron pour l'utilisateur zyrass
-
+    # Sauvegarde de la tâche cron existante dans un fichier temporaire
     crontab -l >mycron
-    echo "*/30 * * * * /home/zyrass/www/it-akademy/cours/Bash/alexis/setup-server.sh disk_space" >>mycron
+
+    # Ajout de la nouvelle tâche cron à la fin du fichier temporaire
+    # La tâche est exécutée à la minute 0 de chaque heure
+    # Le script "setup-server.sh" est exécuté avec l'argument "disk_space"
+    echo "0 * * * * /home/zyrass/www/it-akademy/cours/Bash/alexis/setup-server.sh disk_space" >>mycron
+
+    # Importation de la nouvelle tâche cron depuis le fichier temporaire
     crontab mycron
+
+    # Suppression du fichier temporaire
     rm mycron
-    # service cron restart
-    echo "Tâche cron ajoutée avec succès pour l'utilisateur zyrass !"
+
+    echo "Tâche cron ajoutée avec succès pour l'utilisateur $USER !"
 }
 
 mode_nginx_host2() {
@@ -440,7 +485,7 @@ delete_user | DELETE_USER)
     mode_delete_user "$2"
     ;;
 -h | --help | -H | --HELP)
-    get_help
+    mode_help
     ;;
 install | INSTALL)
     mode_install
