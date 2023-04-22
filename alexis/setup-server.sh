@@ -63,8 +63,8 @@ generate_password() {
 #   disk_space              ||  NON                         ||  Permet d'afficher instantanément l'espace
 #                           ||                              ||  restant sur une machine quelconque.
 # ================================================================================================================
-#   cronjob_setup           ||  NON                         ||  Permet de configurer une tâche cron
-#                           ||                              ||  afin d'afficher l'espace disque sur un
+#                           ||                              ||  Permet de configurer une tâche cron
+#   cronjob_setup           ||  NON                         ||  afin d'afficher l'espace disque sur un
 #                           ||                              ||  serveur discord.
 # ===============================================================================================================
 #   -h                      ||  NON                         ||  Permet d'afficher l'aide du programme.
@@ -176,6 +176,7 @@ mode_add_user() {
     fi
 }
 
+# Fonction pour le mode : delete_user param1
 mode_delete_user() {
     # Définition de la variable locale de la fonction.
     # Il s'agit de l'arguments passé qui sera exploité uniquement dans cette fonction.
@@ -218,86 +219,55 @@ mode_delete_user() {
     fi
 }
 
+# Fonction pour le mode : install
 mode_install() {
-    echo
-    echo "⚪ MODE : CONFIGURATION D'UN NOUVEAU SERVEUR"
-    echo
+    echo -e "\033[1m\n ✅ MODE DEMARRER AVEC SUCCES:\033[0m \033[94minstall\n\033[0m"
 
-    echo "👉 ETAPE 1 : Ajout du repository pour php (ppa:ondrej/php)"
-    add-apt-repository ppa:ondrej/php -y
+    # Vérifier si le repository ppa:ondrej/php existe déjà
+    echo -e " 💬 \033[1m\033[1;35mETAPE 1:\033[0m \033[1;33mAjout du repository pour obtenir php 8.2 (ppa:ondrej/php)\033[0m\n"
 
-    # Mettre à jour le système et les paquets SNAP en une seule commande pour éviter une deuxième vérification de la liste des paquets
-    echo "👉 ETAPE 2 : Mise à jour du système et des paquets SNAP"
-    echo
-
-    apt-get update && apt-get upgrade -y && snap refresh && apt-get autoremove -y
-
-    # Installer tous les paquets nécessaires en une seule commande pour éviter d'exécuter plusieurs commandes distinctes
-    echo
-    echo "👉 ETAPE 3 : Installation de différents paquets avec APT"
-    echo
-
-    apt install software-properties-common nginx php8.2-fpm php8.2-common composer git curl -y
-
-    echo
-    echo "🎉 - Configuration du nouveau serveur terminée avec succès. 🎊"
-    echo
-
-    exit
-}
-
-mode_disk_space() {
-    echo
-    echo "⚪ MODE : AFFICHAGE DE L'ESPACE DISQUE"
-    echo
-
-    # Seuil d'espace disque libre (en pourcentage)
-    seuil=5
-
-    # Récupère l'espace disque disponible en pourcentage
-    espace=$(df -h / | cut -d " " -f 22 | cut -d "%" -f 1 | tail -n1)
-
-    if [[ "$espace" -gt "$seuil" ]]; then
-
-        # Vérifie si l'espace disque disponible est inférieur au seuil
-        # Construit le message à envoyer sur Discord
-        # message="\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n\n྅   📢 - Alain:\tL'espace disque dispose actuellement de $espace% d'espace libre.\n྅   📢 - Alain:\tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅   📢 - Alain:\tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅   📢 - Alain:\tSi cela arrive, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !.\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n"
-
-        mydate=$(
-            date +"%A %d %B %Y - %T"
-        )
-        message="\n# Alain GUILLON ( $mydate ) - Prochaine mise à jour dans 1 heure\n💬\tAlexis, tu es la variable la plus constante dans mon équation de réussite en programmation.\n💬\t Je te remercie de ta patience, de ton expertise et de ta passion pour l'enseignement.\n💬\t Bonne chance pour tes futurs projets !\n\n## ESPACE DISQUE PAS ASSEZ FAIBLE ( $espace% disponible )\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n྅ \t\t📢 \tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅ \t\t📢 \tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅ \t\t📢 \tSi cela arrive... Veuillez prévenir ma femme qu'elle me verra moins souvent 👀 ou pas...\n྅ \t\t📢 \n྅ \t\t📢 \tMais, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !\n྅ \t\t📢 \tRestons positif, je suis un développeur un peu fou sur les bords\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺"
-
-        echo "$message"
-
+    # Le "-q" de la commande grep signifie "quiet", c'est-à-dire que grep ne doit pas afficher les résultats de la recherche à l'écran.
+    # "ondrej/php" est la chaîne de caractères que je recherche.
+    # "/etc/apt/sources.list" est le fichier dans lequel je cherche la chaîne de caractères précédente.
+    # "/etc/apt/sources.list.d/*" est un chemin qui spécifie tous les fichiers situés dans le répertoire /etc/apt/sources.list.d/
+    if ! grep -q "ondrej/php" /etc/apt/sources.list /etc/apt/sources.list.d/*; then
+        echo -e " ✅ \033[1m\033[1;32mInstallation du repository pour obtenir php 8.2 (ppa:ondrej/php)\033[0m\n"
+        add-apt-repository ppa:ondrej/php -y
+    else
+        echo -e " ❌ \033[1m\033[1;31mLe repository pour obtenir php 8.2 (ppa:ondrej/php) à déjà été ajouté\033[0m\n"
     fi
 
-    # Envoie le message sur Discord via le webhook
-    # curl -H "Content-Type: application/json" -d "{ \"content\": \"$message\" }" https://discord.com/api/webhooks/1098570523002277899/InkvgtZDAReTRLy-wrHJtigOgYhkDXZ7y4-S_vElPzKgDMOpFxMyjDkWgIE0lnRx8stI
+    # Ajoute une pause d'une seconde
+    sleep 1
 
-    curl -H "Content-Type: application/json" -d "{ \"content\": \"$message\" }" https://discord.com/api/webhooks/1099275717839171594/Njj9b6_dgIwNpekavRsh5L4p_24VSkO4HFrTDbRF9MHkh2XFU3lpPq1-xRBLbJDTBRd8
-}
+    # Mettre à jour le système et les paquets SNAP en une seule commande pour éviter une deuxième vérification de la liste des paquets
+    echo -e " 💬 \033[1m\033[1;35mETAPE 2:\033[0m \033[1;33mMise à jour du système et des paquets SNAP\033[0m\n"
+    apt-get update && apt-get upgrade -y && snap refresh && apt-get autoremove -y
 
-mode_cronjob_setup() {
-    echo
-    echo "⚪ MODE : CREATION D'UNE TACHE CRON POUR AFFICHER L'ESPACE DISQUE"
-    echo
+    # Ajoute une pause d'une seconde
+    sleep 1
 
-    # Sauvegarde de la tâche cron existante dans un fichier temporaire
-    crontab -l >mycron
+    # Installer tous les paquets nécessaires en une seule commande pour éviter d'exécuter plusieurs commandes distinctes
+    echo -e "\n 💬 \033[1m\033[1;35mETAPE 3:\033[0m \033[1;33mInstallation de différents paquets avec APT\033[0m\n"
+    echo -e " ➕ \033[1m\033[1;36mcurl\033[0m"
+    echo -e " ➕ \033[1m\033[1;36msoftware-properties-common\033[0m"
+    echo -e " ➕ \033[1m\033[1;36mphp8.2-common\033[0m"
+    echo -e " ➕ \033[1m\033[1;36mphp8.2-fpm\033[0m"
+    echo -e " ➕ \033[1m\033[1;36mnginx\033[0m"
+    echo -e " ➕ \033[1m\033[1;36mcomposer\033[0m"
+    echo -e " ➕ \033[1m\033[1;36mgit\033[0m\n"
+    apt install software-properties-common nginx php8.2-fpm php8.2-common composer git curl -y
 
-    # Ajout de la nouvelle tâche cron à la fin du fichier temporaire
-    # La tâche est exécutée à la minute 0 de chaque heure
-    # Le script "setup-server.sh" est exécuté avec l'argument "disk_space"
-    echo "0 * * * * /home/zyrass/www/it-akademy/cours/Bash/alexis/setup-server.sh disk_space" >>mycron
+    # Ajoute une pause d'une seconde
+    sleep 1
 
-    # Importation de la nouvelle tâche cron depuis le fichier temporaire
-    crontab mycron
-
-    # Suppression du fichier temporaire
-    rm mycron
-
-    echo "Tâche cron ajoutée avec succès pour l'utilisateur $USER !"
+    # Vérifier si l'installation est réussie
+    if [ $? -eq 0 ]; then
+        echo -e "\n 🎉 \033[1m\033[1;32m- Configuration du nouveau serveur terminée avec succès.\033[0m 🎊\n"
+    else
+        echo -e "\n ❌ \033[1m\033[1;31m- Erreur lors de l'installation des paquets requis.\033[0m\n"
+    fi
+    exit
 }
 
 mode_nginx_host2() {
@@ -518,6 +488,60 @@ EOF
         service nginx status
         echo
     fi
+}
+
+mode_disk_space() {
+    echo
+    echo "⚪ MODE : AFFICHAGE DE L'ESPACE DISQUE"
+    echo
+
+    # Seuil d'espace disque libre (en pourcentage)
+    seuil=5
+
+    # Récupère l'espace disque disponible en pourcentage
+    espace=$(df -h / | cut -d " " -f 22 | cut -d "%" -f 1 | tail -n1)
+
+    if [[ "$espace" -gt "$seuil" ]]; then
+
+        # Vérifie si l'espace disque disponible est inférieur au seuil
+        # Construit le message à envoyer sur Discord
+        # message="\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n\n྅   📢 - Alain:\tL'espace disque dispose actuellement de $espace% d'espace libre.\n྅   📢 - Alain:\tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅   📢 - Alain:\tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅   📢 - Alain:\tSi cela arrive, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !.\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n"
+
+        mydate=$(
+            date +"%A %d %B %Y - %T"
+        )
+        message="\n# Alain GUILLON ( $mydate ) - Prochaine mise à jour dans 1 heure\n💬\tAlexis, tu es la variable la plus constante dans mon équation de réussite en programmation.\n💬\t Je te remercie de ta patience, de ton expertise et de ta passion pour l'enseignement.\n💬\t Bonne chance pour tes futurs projets !\n\n## ESPACE DISQUE PAS ASSEZ FAIBLE ( $espace% disponible )\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n྅ \t\t📢 \tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅ \t\t📢 \tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅ \t\t📢 \tSi cela arrive... Veuillez prévenir ma femme qu'elle me verra moins souvent 👀 ou pas...\n྅ \t\t📢 \n྅ \t\t📢 \tMais, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !\n྅ \t\t📢 \tRestons positif, je suis un développeur un peu fou sur les bords\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺"
+
+        echo "$message"
+
+    fi
+
+    # Envoie le message sur Discord via le webhook
+    # curl -H "Content-Type: application/json" -d "{ \"content\": \"$message\" }" https://discord.com/api/webhooks/1098570523002277899/InkvgtZDAReTRLy-wrHJtigOgYhkDXZ7y4-S_vElPzKgDMOpFxMyjDkWgIE0lnRx8stI
+
+    curl -H "Content-Type: application/json" -d "{ \"content\": \"$message\" }" https://discord.com/api/webhooks/1099275717839171594/Njj9b6_dgIwNpekavRsh5L4p_24VSkO4HFrTDbRF9MHkh2XFU3lpPq1-xRBLbJDTBRd8
+}
+
+mode_cronjob_setup() {
+    echo
+    echo "⚪ MODE : CREATION D'UNE TACHE CRON POUR AFFICHER L'ESPACE DISQUE"
+    echo
+
+    # Sauvegarde de la tâche cron existante dans un fichier temporaire
+    crontab -l >mycron
+
+    # Ajout de la nouvelle tâche cron à la fin du fichier temporaire
+    # La tâche est exécutée à la minute 0 de chaque heure
+    # Le script "setup-server.sh" est exécuté avec l'argument "disk_space"
+    echo "0 * * * * /home/zyrass/www/it-akademy/cours/Bash/alexis/setup-server.sh disk_space" >>mycron
+
+    # Importation de la nouvelle tâche cron depuis le fichier temporaire
+    crontab mycron
+
+    # Suppression du fichier temporaire
+    rm mycron
+
+    echo "Tâche cron ajoutée avec succès pour l'utilisateur $USER !"
 }
 
 case $GET_MODE in
