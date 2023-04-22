@@ -1,8 +1,11 @@
 #!/bin/bash
 
-# Vérification si le programme est bien démarrer en super administrateur auquel cas, celui-ci affiche un message avec une petite notice de comment faire.
+# Effacement du contenu du terminal
+clear
+
+# Vérification si le programme est bien démarrer en super administrateur auquel cas,
+# celui-ci affiche un message avec une petite notice de comment faire.
 if [[ $(/usr/bin/id -u) -ne 0 ]]; then
-    clear
     echo -e "\n❌ \033[31m- Désolé, mais ce programme doit être démarrer en super administrateur...\n\033[0m"
     echo -e "\033[1m📌 - Mais... Comment faire ?\033[0m\n"
 
@@ -17,8 +20,29 @@ fi
 # Définition des constantes utililisée(s) dans ce programme.
 GET_MODE=$1
 
+# Bonus à voir lors de la génération d'un user avec mot de passe valide.
+# Cette fonction c'est pour éviter d'avoir un message comme quoi le mot de passe n'est pas bon avec passwd
+# Elle fonctionne mais n'est pas du tout appliqué dans l'algorithme demandé.
+generate_password() {
+    # Définit la longueur du mot de passe, par défaut 16 caractères
+    # en utilisant le premier argument passé à la fonction, ou 16 si aucun argument n'est fourni.
+    local length=${1:-16}
+
+    # Définit les caractères autorisés dans le mot de passe.
+    # La chaîne de caractères inclut des lettres minuscules, des lettres majuscules, des chiffres, ainsi que les caractères spéciaux "!*$#@".
+    local chars='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!*$#@'
+
+    # Utilise /dev/urandom pour générer une chaîne de caractères aléatoires.
+    # La commande tr -dc supprime les caractères non désirés qui ne figurent pas dans la liste de caractères spécifiée dans $chars.
+    # Enfin, la commande head -c lit les $length premiers caractères de la chaîne résultante.
+    local password=$(tr -dc $chars </dev/urandom | head -c $length)
+
+    # Renvoie le mot de passe généré.
+    echo "$password"
+}
+
 # ================================================================================================================
-#                                   CONFIGURATION DES FONCTIONS A VENIR
+#                      CONFIGURATION DES FONCTIONS A VENIR ET UTILISABLE COMME 1ER ARGUMENT
 # ================================================================================================================
 #   NOMS DES FONCTIONS      ||  DES PARAMETRES ?            ||  DESCRIPTION COURTE
 # ================================================================================================================
@@ -51,17 +75,16 @@ GET_MODE=$1
 # Fonction pour le mode : -h
 # Fonction pour le mode : --help
 mode_help() {
-    clear
-    echo -e "\n\033[1mMODE : AIDE SUR L'UTILISATION DU PROGRAMME\033[0m\n"
+    echo -e "\n ✅ - \033[1mMODE LANCE AVEC SUCCES: \033[96m-h || --help\033[0m\n"
 
-    echo -e "📌 \033[1mSIGNATURE DU PROGRAMME :\033[0m\n"
+    echo -e " 📌 \033[1mSIGNATURE DU PROGRAMME :\033[0m\n"
     echo -e "\t\033[91msudo setup-server.sh [MODE] [OPTIONS]?\033[0m\n"
 
-    echo -e "📌 \033[1mPOUR OBTENIR DE L'AIDE - (\033[30m\033[3m C'est celle que tu vois à l'écran même \033[0m) :\033[0m\n"
+    echo -e " 📌 \033[1mPOUR OBTENIR DE L'AIDE - (\033[30m\033[3m C'est celle que tu vois à l'écran même \033[0m) :\033[0m\n"
     echo -e " 📖 \033[92m-h\033[0m            - Option courte pour afficher l'aide."
     echo -e " 📖 \033[92m--help\033[0m        - Option longue pour afficher l'aide.\n"
 
-    echo -e "📌 \033[1mLes modes disponible sont :\033[0m\n"
+    echo -e " 📌 \033[1mLes modes disponible sont :\033[0m\n"
     echo -e " 📖 \033[92madd_user\033[0m      - Ajouter un nouvel utilisateur. \033[1m2 PARAMETRES OBLIGATOIRE\033[0m : \033[96mUSERNAME PASSWORD\033[0m"
     echo -e " 📖 \033[92mdelete_user\033[0m   - Supprimer un utilisateur. \033[1m1 PARAMETRE OBLIGATOIRE\033[0m : \033[96mUSERNAME\033[0m"
     echo -e " 📖 \033[92minstall\033[0m       - Installer un nouveau serveur."
@@ -75,10 +98,8 @@ mode_help() {
 
 # Fonction pour le mode : add_user param1 param2
 mode_add_user() {
-    clear
-
     # Définition des variable locale à la fonction.
-    # Il s'agit des paramètres qui sont retourné.
+    # Il s'agit des arguments passé qui seront exploité uniquement dans cette fonction.
     local username=$1
     local password=$2
 
@@ -102,87 +123,98 @@ mode_add_user() {
     # Vérification de la longueur du mot de passe
     while ((${#password} < 8)); do
         echo -e "\n\033[1m\n ❌ - ECHEC DU DEMARRAGE DU MODE:\033[0m \033[94madd_user\033[0m\n"
-        echo -rp '\033[95mLe mot de passe doit contenir au moins 8 caractères.\033[0m\n'
-        read -rsp $'\nVeuillez de nouveau saisir un mot de passe temporaire : ' GET_NEW_PASSWORD
-        echo
+        echo -e ' \033[95mLe mot de passe doit contenir au moins 8 caractères.\033[0m'
+        read -rsp $'\n Veuillez de nouveau saisir un mot de passe temporaire pour continuer : ' GET_NEW_PASSWORD
     done
 
-    echo "\033[1m\n✅ MODE DEMARRER AVEC SUCCES:\033[0m \033[93madd_user\n\033[0m"
+    echo -e "\033[1m\n ✅ MODE DEMARRER AVEC SUCCES:\033[0m \033[94madd_user\n\033[0m"
 
     # Récapitulatif des informations saisies en paramètres
-    echo "\nOk, voici les informations que vous souhaitez obtenir pour cet utilisateu:\n"
+    echo -e " 💬 - Voici les informations que vous souhaitez obtenir pour l'utilisateur \"\033[1;32m$username\033[0m\" :\n"
 
-    echo "- NOM D'UTILISATEUR : $username"
-    echo "- MOT DE PASSE (temporaire) : $password"
+    echo -e " ✅ \033[1m- NOM D'UTILISATEUR : \033[1;32m$username\033[0m"
+    echo -e " ✅ \033[1m- MOT DE PASSE PASSE EN 2EME ARGUMENTS DE LA FONCTION (temporaire) : \033[1;32m$password\033[0m"
 
-    echo "\nAvant de créer cet utilisateur ($username), je dois m'assurer si il existe ou non...\n"
+    random_password=$(generate_password 16)
+    echo -e " ❌ \033[1m\033[1;31m- MOT DE PASSE NON UTILISE MAIS QUI POURRAIS ETRE PRATIQUE DANS LA CREATION D'UN COMPTE (temporaire) : \033[1;33m$random_password\033[0m"
+
+    echo -e "\n 💬 - Avant de créer cet utilisateur ($username), je dois m'assurer si il existe ou non...\n"
 
     # Vérification de l'existance de l'utilisateur
     if id "$username" >/dev/null 2>&1; then
-        echo -e "\n❌ - L'utilisateur \"$username\" existe déjà.\nAucune création n'a été réalisé. Ceci marque donc la fin du programme.\n"
+        echo -e "\n ❌ \033[1m\033[1;31m- L'utilisateur \"$username\" existe déjà.\033[0m\n"
+        echo -e " 💬 \033[1;33m- Aucune création n'a été réalisé. Ceci marque donc la fin du programme.\033[0m\n"
         exit 1
     else
-        echo "✅ - $username, n'existe pas. Création en cours..."
+        echo -e " ✅ - $username, n'existe pas. Création en cours... ( Veuillez patientez 1s )\n"
+
+        # Fait patienté 1s
+        sleep 1
 
         # Création de l'utilisateur avec le shell bash par défaut.
         useradd -m "$username" -s /bin/bash
 
         # Création d'un mot de passe temporaire
-        echo -e "$password\n$password" | passwd "$username"
+        echo -e "$password\n$password" | passwd "$username" 2>toto.txt
 
-        # Vérification du mot de passe
-        if [[ "$?" == 1 ]]; then
-            echo
-            echo -e "❌ - Le mot de passe saisi n'est pas valide.\nFin du programme."
-            exit 1
-        else
-            # Demande de changement de mot de passe au premier démarrage
-            chage -d 0 "$username"
+        # Effacement du fichier créé en sortie. (La fonction pour générer un mot de passe serait vachement utile à ce moment.)
+        # Le contenu du fichier étant celui-ci :
+        #
+        # Nouveau mot de passe : MOT DE PASSE INCORRECT :
+        # Le mot de passe ne passe pas la vérification dans le dictionnaire - basé sur un mot du dictionnaire
+        # Retapez le nouveau mot de passe : passwd : mot de passe mis à jour avec succès
+        rm toto.txt
 
-            echo "✅ - $username a été créé avec succès."
-            echo "✅ - Le mot de passe temporaire a été créé avec succès."
-            echo "✅ - Le mot de passe doit être changé au premier démarrage."
-            echo
-            exit 1
-        fi
+        # Force le changement de mot de passe au premier démarrage
+        chage -d 0 "$username"
+
+        echo -e " 🎉 \033[1m\033[1;32m- $username a été créé avec succès.\033[0m 🎊"
+        echo -e " 🎉 \033[1m\033[1;32m- Le mot de passe temporaire a été créé avec succès. Pour rappel il s'agit de : \033[1m\033[1;33m$password\033[0m 🎊"
+        echo -e " 🎉 \033[1m\033[1;32m- Un nouveau mot de passe sera demandé à la première connexion de $username.\033[0m 🎊\n"
+
+        exit
     fi
 }
 
 mode_delete_user() {
-    echo
-    echo "⚪ MODE : SUPPRESSION D'UN UTILISATEUR"
-    echo
-
-    # Paramètre de la fonction
+    # Définition de la variable locale de la fonction.
+    # Il s'agit de l'arguments passé qui sera exploité uniquement dans cette fonction.
     local username=$1
 
     # Vérifier si le paramètre USERNAME ($1) est fourni
     if [[ -z "$username" ]]; then
-        echo -e "❌ - Veuillez fournir un nom d'utilisateur à supprimer.\nFin du programme."
-        echo
-        exit 1
+        echo -e "\n\033[1m\n ❌ - ECHEC DU DEMARRAGE DU MODE:\033[0m \033[94mdelete_user\033[0m\n"
+        echo -e " 💬 \033[1;33m- Désolé mais vous devez fournir un nom d'utilisateur à supprimer.\033[0m"
+        echo -e " 💬 \033[1;33m- Fin du programme.\033[0m\n"
+        exit
     fi
+
+    echo -e "\033[1m\n ✅ MODE DEMARRER AVEC SUCCES:\033[0m \033[94mdelete_user\n\033[0m"
+    echo -e " 💬 \033[1m- Vérification de l'existance de l'utilisateur ( Patientez 1s ) : \033[1;32m$username\033[0m...\n"
+
+    # Ajoute une pause d'une seconde
+    sleep 1
 
     # Vérifier si l'utilisateur existe
     if id "$username" >/dev/null 2>&1; then
-        echo "✅ - $username existe bien, suppression en cours..."
+        echo -e " ✅ \033[1;32m- $username a bien été trouvé, suppression en cours...\033[0m\n"
+        sleep 1
 
         # Vérifier si le groupe de l'utilisateur est vide et le supprimer s'il est vide
-        USER_GROUP=$(id -gn username)
+        USER_GROUP=$(id -gn ${username})
         if getent group "$USER_GROUP" | grep -q "$USER_GROUP:.*"; then
-            echo "Le groupe $USER_GROUP est vide, il sera supprimé avec l'utilisateur."
+            echo -e " 💬 Le groupe $USER_GROUP est vide, il sera supprimé avec l'utilisateur.\n"
             groupdel "$USER_GROUP"
         fi
 
         # Supprimer l'utilisateur
         deluser --remove-home "$username"
 
-        echo "🎉 - Suppression de l'utilisateur $username terminée avec succès. 🎊"
+        echo -e "\n 🎉 \033[1;32m- Suppression de l'utilisateur $username terminée avec succès.\033[0m 🎊"
         echo
     else
-        echo "❌ - Désolé, l'utilisateur \"$username\" n'existe pas. Fin du programme."
-        echo
-        exit 1
+        echo -e " ❌ \033[1;31m- Désolé, l'utilisateur \"\033[1m$username\"\033[0m\033[1;31m n'existe pas. Fin du programme.\n\033[0m"
+        exit
     fi
 }
 
