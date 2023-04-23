@@ -503,18 +503,18 @@ mode_disk_space() {
 
         echo -e "${space_percent}\n"
 
-        # Envoie le message sur Discord via le webhook
-        # curl -H "Content-Type: application/json" -d "{ \"content\": \"$message\" }" https://discord.com/api/webhooks/1098570523002277899/InkvgtZDAReTRLy-wrHJtigOgYhkDXZ7y4-S_vElPzKgDMOpFxMyjDkWgIE0lnRx8stI
+        # Envoie le message sur Discord via le webhook (Pour ALEXIS)
+        curl -H "Content-Type: application/json" -d "{ \"content\": \"$message\" }" https://discord.com/api/webhooks/1098570523002277899/InkvgtZDAReTRLy-wrHJtigOgYhkDXZ7y4-S_vElPzKgDMOpFxMyjDkWgIE0lnRx8stI
 
-        curl -H "Content-Type: application/json" -X POST -d "{\"content\":\"$message\"}" https://discord.com/api/webhooks/1099275717839171594/Njj9b6_dgIwNpekavRsh5L4p_24VSkO4HFrTDbRF9MHkh2XFU3lpPq1-xRBLbJDTBRd8
+        # Envoie le message Discord via le webhook (Pour tester le script en l'absence d'ALEXIS)
+        # curl -H "Content-Type: application/json" -X POST -d "{\"content\":\"$message\"}" https://discord.com/api/webhooks/1099275717839171594/Njj9b6_dgIwNpekavRsh5L4p_24VSkO4HFrTDbRF9MHkh2XFU3lpPq1-xRBLbJDTBRd8
     fi
 
 }
 
+# Fonction pour cronjob_setup
 mode_cronjob_setup() {
-    echo
-    echo "⚪ MODE : CREATION D'UNE TACHE CRON POUR AFFICHER L'ESPACE DISQUE"
-    echo
+    echo -e "\033[1m\n ✅ MODE DEMARRER AVEC SUCCES:\033[0m \033[94mcronjob_setup\n\033[0m"
 
     # Sauvegarde de la tâche cron existante dans un fichier temporaire
     crontab -l >mycron
@@ -522,7 +522,7 @@ mode_cronjob_setup() {
     # Ajout de la nouvelle tâche cron à la fin du fichier temporaire
     # La tâche est exécutée à la minute 0 de chaque heure
     # Le script "setup-server.sh" est exécuté avec l'argument "disk_space"
-    echo "0 * * * * /home/zyrass/www/it-akademy/cours/Bash/alexis/setup-server.sh disk_space" >>mycron
+    echo "*/15 * * * * /home/zyrass/www/it-akademy/cours/Bash/alexis/setup-server.sh disk_space" >>mycron
 
     # Importation de la nouvelle tâche cron depuis le fichier temporaire
     crontab mycron
@@ -530,7 +530,15 @@ mode_cronjob_setup() {
     # Suppression du fichier temporaire
     rm mycron
 
-    echo "Tâche cron ajoutée avec succès pour l'utilisateur $USER !"
+    echo -e " 🎉 \033[1m\033[1;32m- Tâche cron ajoutée avec succès pour l'utilisateur $USER !\033[0m 🎊"
+
+    echo -e "\n\033[93m ✅ Tâche cron utilisé :\033[0m"
+    echo -e " 👀 15min: \033[95m*/15 * * * * /home/zyrass/www/it-akademy/cours/Bash/alexis/setup-server.sh disk_space\033[0m"
+
+    echo -e "\n\033[93m 📑 Autre possibilité en modifiant le code \033[0m"
+    echo -e " 👀 30 min: \033[95m*/30 * * * * /home/zyrass/www/it-akademy/cours/Bash/alexis/setup-server.sh disk_space\n\033[0m"
+    echo -e " 👀 1h: \033[95m0 * * * * /home/zyrass/www/it-akademy/cours/Bash/alexis/setup-server.sh disk_space\033[0m"
+
 }
 
 case $GET_MODE in
