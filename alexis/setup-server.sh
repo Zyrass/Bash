@@ -60,7 +60,7 @@ generate_password() {
 #   nginx_host              ||  OUI (1) domain_name         ||  Permet de configurer un serveur nginx
 #                           ||                              ||  avec l'ajout d'un nouveau nom de domaine.
 # ================================================================================================================
-#   disk_space              ||  NON                         ||  Permet d'afficher instantanément l'espace
+#   disk_space              ||  OUI (1) path                ||  Permet d'afficher instantanément l'espace
 #                           ||                              ||  restant sur une machine quelconque.
 # ================================================================================================================
 #                           ||                              ||  Permet de configurer une tâche cron
@@ -89,7 +89,7 @@ mode_help() {
     echo -e " 📖 \033[92mdelete_user\033[0m   - Supprimer un utilisateur. \033[1m1 PARAMETRE OBLIGATOIRE\033[0m : \033[96mUSERNAME\033[0m"
     echo -e " 📖 \033[92minstall\033[0m       - Installer un nouveau serveur."
     echo -e " 📖 \033[92mnginx_host\033[0m    - Configurer un nouveau serveur hôte nginx. \033[1m1 PARAMETRE OBLIGATOIRE\033[0m : \033[96mNOM_DU_DOMAINE\033[0m"
-    echo -e " 📖 \033[92mdisk_space\033[0m    - Afficher l'espace disque disponible."
+    echo -e " 📖 \033[92mdisk_space\033[0m    - Afficher l'espace disque disponible. \033[1m1 PARAMETRE OBLIGATOIRE\033[0m : \033[96mPATH\033[0m"
     echo -e " 📖 \033[92mcronjob_setup\033[0m - Configurer une tâche cron.\n"
 
     echo -e "\t\033[93mVeuillez relancer ce script avec le mode désiré et les paramètres si nécessaires.\033[0m"
@@ -474,35 +474,41 @@ EOF
 
 # Fonction pour le mode : disk_space
 mode_disk_space() {
-    echo
-    echo "⚪ MODE : AFFICHAGE DE L'ESPACE DISQUE"
-    echo
+    echo -e "\033[1m\n ✅ MODE DEMARRER AVEC SUCCES:\033[0m \033[94mdisk_space\n\033[0m"
 
-    # Seuil d'espace disque libre (en pourcentage)
-    seuil=5
+    # Définition du chemin par défaut si celui-ci n'est pas défini ou n'existe pas
+    local space_path_default=${1:-"/"}
 
-    # Récupère l'espace disque disponible en pourcentage
-    espace=$(df -h / | cut -d " " -f 22 | cut -d "%" -f 1 | tail -n1)
-
-    if [[ "$espace" -gt "$seuil" ]]; then
-
-        # Vérifie si l'espace disque disponible est inférieur au seuil
-        # Construit le message à envoyer sur Discord
-        # message="\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n\n྅   📢 - Alain:\tL'espace disque dispose actuellement de $espace% d'espace libre.\n྅   📢 - Alain:\tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅   📢 - Alain:\tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅   📢 - Alain:\tSi cela arrive, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !.\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n"
-
-        mydate=$(
-            date +"%A %d %B %Y - %T"
-        )
-        message="\n# Alain GUILLON ( $mydate ) - Prochaine mise à jour dans 1 heure\n💬\tAlexis, tu es la variable la plus constante dans mon équation de réussite en programmation.\n💬\t Je te remercie de ta patience, de ton expertise et de ta passion pour l'enseignement.\n💬\t Bonne chance pour tes futurs projets !\n\n## ESPACE DISQUE PAS ASSEZ FAIBLE ( $espace% disponible )\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺\n྅ \t\t📢 \tMon espace disque est si plein qu'il est en train de développer sa propre personnalité.\n྅ \t\t📢 \tJ'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.\n྅ \t\t📢 \tSi cela arrive... Veuillez prévenir ma femme qu'elle me verra moins souvent 👀 ou pas...\n྅ \t\t📢 \n྅ \t\t📢 \tMais, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !\n྅ \t\t📢 \tRestons positif, je suis un développeur un peu fou sur les bords\n\n༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺"
-
-        echo "$message"
-
+    if ! test -d "$space_path_default"; then
+        echo -e "\033[93m ❌ - Le dossier $space_path_default n'existe pas.\033[0m"
+        space_path_default="/"
+        echo -e "\033[93m 💬 - Le chemin par défaut à été définit sur $space_path_default vous pouvez changer celui-ci en spécifiant un chemin valide en paramètre de la fonction.\033[0m\n"
     fi
 
-    # Envoie le message sur Discord via le webhook
-    # curl -H "Content-Type: application/json" -d "{ \"content\": \"$message\" }" https://discord.com/api/webhooks/1098570523002277899/InkvgtZDAReTRLy-wrHJtigOgYhkDXZ7y4-S_vElPzKgDMOpFxMyjDkWgIE0lnRx8stI
+    # Définition des variables
+    local mydate=$(date +"%A %d %B %Y à %T")
+    local mySystem=$(lsb_release -d | cut -f2)
+    local space_disk=$(df -h "$space_path_default" | awk 'NR==2{print $(NF-4)}')
+    local space_free=$(df -h "$space_path_default" | awk 'NR==2{print $(NF-2)}')
+    local space_used=$(df -h "$space_path_default" | awk 'NR==2{print $(NF-3)}')
+    local space_percent=$(df -h "$space_path_default" | awk 'NR==2{print $(NF-1)}' | cut -d "%" -f 1)
+    local limit=5 # Seuil d'espace disque libre (en pourcentage)
 
-    curl -H "Content-Type: application/json" -d "{ \"content\": \"$message\" }" https://discord.com/api/webhooks/1099275717839171594/Njj9b6_dgIwNpekavRsh5L4p_24VSkO4HFrTDbRF9MHkh2XFU3lpPq1-xRBLbJDTBRd8
+    # Vérifie si l'espace disque utilisé est supérieur à la limite imposé (5)
+    if [[ "${space_percent}" -gt "${limit}" ]]; then
+
+        # Construit le message à envoyer sur Discord
+        # Construction du message Discord
+        local message="### Espace disque utilisé :  $space_percent%\n\n💬 \t**Alain**, sur ton PC portable qui est sous **$mySystem**,\n💬 \ttu as un espace disque qui commence à se réduire. Fais attention !\n\n- Path analysé: **$space_path_default**\n- Espace Disque: **$space_disk**\n- Epace disponible: **$space_free**\n- Espace utilisé: **$space_used** soit **$space_percent%** 👀\n\n\`\`\`diff\n+ Ce message a été envoyé via un script Bash écrit par Alain GUILLON.\n- Il a été programmé pour être envoyé toutes les heures à partir d'une tâche cron.\n\`\`\`\n📢 - Nous sommes le **$mydate**, le prochain rappel sera dans **1 heure**\n\n"
+
+        echo -e "${space_percent}\n"
+
+        # Envoie le message sur Discord via le webhook
+        # curl -H "Content-Type: application/json" -d "{ \"content\": \"$message\" }" https://discord.com/api/webhooks/1098570523002277899/InkvgtZDAReTRLy-wrHJtigOgYhkDXZ7y4-S_vElPzKgDMOpFxMyjDkWgIE0lnRx8stI
+
+        curl -H "Content-Type: application/json" -X POST -d "{\"content\":\"$message\"}" https://discord.com/api/webhooks/1099275717839171594/Njj9b6_dgIwNpekavRsh5L4p_24VSkO4HFrTDbRF9MHkh2XFU3lpPq1-xRBLbJDTBRd8
+    fi
+
 }
 
 mode_cronjob_setup() {
@@ -544,7 +550,7 @@ nginx_host | NGINX_HOST)
     mode_nginx_host "$2"
     ;;
 disk_space | DISK_SPACE)
-    mode_disk_space
+    mode_disk_space "$2"
     ;;
 cronjob_setup | CRONJOB_SETUP)
     mode_cronjob_setup

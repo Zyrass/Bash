@@ -1,17 +1,15 @@
-# Alain GUILLON
+### Espace disque utilisé: ${espace_pourcent}%
 
-> Alexis, tu es la variable la plus constante dans mon équation de réussite en programmation.
-> Je te remercie de ta patience, de ton expertise et de ta passion pour l'enseignement.
-> Bonne chance pour tes futurs projets !
+💬 &nbsp;&nbsp;**Alain**, sur ton pc portable qui est sous **${mySystem}**
+💬 &nbsp;&nbsp;tu as un espace disque qui commence à se réduire. Fait attention!
 
-## ESPACE DISQUE PAS ASSEZ FAIBLE ( $espace% disponible )
+| Path analysé | Espace Disque | Espace disponible |               Espace utilisé               |
+| ------------ | :-----------: | :---------------: | :----------------------------------------: |
+| ${2}         | ${space_disk} |   ${space_free}   | ${espace_used} soit **${space_percent}\*\* |
 
-༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺
-྅ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;📢 &nbsp;&nbsp;Mon espace disque est si plein qu'il est en train de développer sa propre personnalité.
-྅ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;📢 &nbsp;&nbsp;J'ai l'impression que bientôt il va prendre le contrôle de mon ordinateur et me forcer à coder pour lui.
-྅ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;📢 &nbsp;&nbsp;Si cela arrive... Veuillez prévenir ma femme qu'elle me verra moins souvent 👀 ou pas...
-྅ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;📢 ;
-྅ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;📢 &nbsp;&nbsp;Mais, je sais que ce sera sa vengeance pour toutes les fois où je l'ai maltraité en stockant des fichiers inutiles !
-྅ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;📢 &nbsp;&nbsp;Restons positif, je suis un développeur un peu fou sur les bords
+```diff
++ Ce message a été envoyé via un script Bash écrit par Alain GUILLON.
+- Il a été programmé pour être envoyé toutes les heures à partir d'une tâche cron.
+```
 
-༻ °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° ༺
+📢 - Nous sommes le ${myDate}, le prochain rappel sera dans **1 heure**
