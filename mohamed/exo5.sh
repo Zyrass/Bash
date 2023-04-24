@@ -6,7 +6,7 @@ if [[ -z $1 ]]; then
     read -p "Entrez un nombre : " n
 else
     # Si oui, utilise le premier paramètre comme nombre à factoriser
-    n=$1
+    declare -i n=$1
 fi
 
 # Initialise la variable fact à 1

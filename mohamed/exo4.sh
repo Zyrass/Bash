@@ -7,9 +7,9 @@ if [ $# -ne 3 ]; then
 fi
 
 # Récupération des paramètres
-num1=$1
+declare -i num1=$1
 op=$2
-num2=$3
+declare -i num2=$3
 
 # Vérification de l'opérateur
 case $op in
