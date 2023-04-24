@@ -121,13 +121,19 @@ mode_add_user() {
     }
 
     # Vérification de la longueur du mot de passe
-    while ((${#password} < 8)); do
-        echo -e "\n\033[1m\n ❌ - ECHEC DU DEMARRAGE DU MODE:\033[0m \033[94madd_user\033[0m\n"
-        echo -e ' \033[95mLe mot de passe doit contenir au moins 8 caractères.\033[0m'
-        read -rsp $'\n Veuillez de nouveau saisir un mot de passe temporaire pour continuer : ' GET_NEW_PASSWORD
+    while true; do
+        clear
+        echo -e "\n\033[1m\n ❌ - ECHEC DU DEMARRAGE DU MODE:\033[0m \033[94madd_user\033[0m"
+        read -rsp $'\n Veuillez saisir un mot de passe temporaire pour continuer : ' password
+        if ((${#password} >= 8)); then
+            break
+        else
+            echo -e ' \033[95mLe mot de passe doit contenir au moins 8 caractères.\033[0m'
+        fi
     done
 
-    echo -e "\033[1m\n ✅ MODE DEMARRER AVEC SUCCES:\033[0m \033[94madd_user\n\033[0m"
+    clear
+    echo -e "\n\033[1m\n ✅ MODE DEMARRER AVEC SUCCES:\033[0m \033[94madd_user\n\033[0m"
 
     # Récapitulatif des informations saisies en paramètres
     echo -e " 💬 - Voici les informations que vous souhaitez obtenir pour l'utilisateur \"\033[1;32m$username\033[0m\" :\n"
